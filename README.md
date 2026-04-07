@@ -1,0 +1,1 @@
+This is a WIP real-time intelligence monitor on Taiwan security. It uses a series of intelligence analysis techniques to predict the likelihood of specific outcomes in the Taiwan crisis. More updates coming soon.
