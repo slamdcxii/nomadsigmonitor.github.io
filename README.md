@@ -1,1 +1,1 @@
-This is a WIP real-time intelligence monitor on Taiwan security. It uses a series of intelligence analysis techniques to predict the likelihood of specific outcomes in the Taiwan crisis. More updates coming soon.
+This is a WIP real-time intelligence monitor on various environments in East Asian securty. It is an official product of Nomad Security|Intelligence|Geopolitics. More updates coming soon.
