@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOMAD S.I.G. — Intelligence Monitor</title>
+<style>
+  :root {
+    --black:        #000000;
+    --dark:         #080808;
+    --dark2:        #0f0f0f;
+    --dark3:        #151515;
+    --dark4:        #1a1a1a;
+    --border:       #1e1e1e;
+    --border2:      #2a2a2a;
+    --silver-dim:   #555555;
+    --silver-dark:  #808080;
+    --silver:       #aaaaaa;
+    --silver-light: #c8c8c8;
+    --silver-bright:#e0e0e0;
+    --white:        #f0f0f0;
+    --active:       #cccccc;
+    --pulse:        rgba(180,180,180,0.15);
+    --glow-soft:    rgba(200,200,200,0.03);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--silver-light);
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── SCANLINE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.04) 2px,
+      rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    background: var(--dark);
+    border-bottom: 1px solid #1a1a1a;
+    padding: 0 40px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--silver-dim);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 24px; }
+  .topbar-indicator {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .indicator-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #3a5a3a;
+    box-shadow: 0 0 4px #3a5a3a;
+    animation: pulse-dot 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 4px #3a5a3a; }
+    50%       { opacity: 0.5; box-shadow: 0 0 8px #4a7a4a; }
+  }
+  .topbar-right { display: flex; align-items: center; gap: 24px; }
+  .topbar-clock { color: var(--silver); font-size: 11px; letter-spacing: 3px; }
+
+  /* ─── HEADER ─── */
+  .header {
+    background: linear-gradient(180deg, #080808 0%, #050505 100%);
+    border-bottom: 1px solid #1a1a1a;
+    padding: 36px 40px 32px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 40px; right: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #333, transparent);
+  }
+  /* faint radial light */
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 400px; height: 300px;
+    background: radial-gradient(ellipse, rgba(160,160,160,0.025) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .logo-wrap {
+    flex-shrink: 0;
+    width: 84px; height: 84px;
+    position: relative;
+  }
+  .logo-wrap svg { width: 100%; height: 100%; }
+
+  .header-center { flex: 1; }
+  .header-eyebrow {
+    font-size: 10px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--silver-dim);
+    margin-bottom: 8px;
+  }
+  .header-title {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--silver-bright);
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .header-title span {
+    color: var(--silver-dim);
+    font-weight: 300;
+    font-size: 24px;
+    letter-spacing: 6px;
+    margin-left: 4px;
+  }
+  .header-sub {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+  }
+
+  .header-right {
+    text-align: right;
+    font-size: 10px;
+    color: var(--silver-dim);
+    letter-spacing: 1.5px;
+    line-height: 1.9;
+  }
+  .header-right .stat-row {
+    display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  }
+  .header-right .stat-val {
+    color: var(--silver-light);
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+  .header-right .classif {
+    display: inline-block;
+    border: 1px solid #333;
+    padding: 4px 12px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--silver);
+    margin-top: 10px;
+  }
+
+  /* ─── SECTION LABEL BAR ─── */
+  .section-bar {
+    background: var(--dark2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dim);
+  }
+  .section-bar-left { display: flex; align-items: center; gap: 8px; }
+  .section-bar-divider { color: #2a2a2a; }
+
+  /* ─── MAIN CONTENT ─── */
+  .main {
+    padding: 40px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* ─── ACTIVE MONITORS HEADING ─── */
+  .monitors-heading {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  .monitors-heading-text {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+  }
+  .monitors-heading-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, #222, transparent);
+  }
+  .monitors-count {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--silver-dim);
+  }
+
+  /* ─── MONITOR GRID ─── */
+  .monitor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    gap: 2px;
+    margin-bottom: 48px;
+  }
+
+  /* ─── MONITOR CARD ─── */
+  .monitor-card {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.25s, background 0.25s;
+    text-decoration: none;
+    display: block;
+    color: inherit;
+  }
+  .monitor-card:hover {
+    border-color: #383838;
+    background: #121212;
+  }
+  .monitor-card:hover .card-launch-btn {
+    border-color: #666;
+    color: var(--silver-bright);
+  }
+  .monitor-card:hover .card-corner-accent {
+    opacity: 1;
+  }
+
+  /* corner bracket accent */
+  .card-corner-accent {
+    position: absolute;
+    top: 0; left: 0;
+    width: 24px; height: 24px;
+    border-top: 1px solid #444;
+    border-left: 1px solid #444;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .card-corner-accent-br {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 24px; height: 24px;
+    border-bottom: 1px solid #333;
+    border-right: 1px solid #333;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .monitor-card:hover .card-corner-accent-br { opacity: 1; }
+
+  /* top accent stripe */
+  .card-stripe {
+    height: 2px;
+    background: linear-gradient(90deg, #333 0%, #555 40%, transparent 100%);
+  }
+
+  .card-inner {
+    padding: 24px 28px 22px;
+  }
+
+  /* card header row */
+  .card-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .card-id-block { display: flex; align-items: center; gap: 10px; }
+  .card-id {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dim);
+    padding: 3px 8px;
+    border: 1px solid #222;
+    white-space: nowrap;
+  }
+  .card-status-badge {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #5a8a5a;
+  }
+  .status-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #3a6a3a;
+    animation: pulse-dot 3s ease-in-out infinite;
+  }
+  .card-date {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--silver-dim);
+    text-align: right;
+  }
+
+  /* card title */
+  .card-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--silver-bright);
+    line-height: 1.15;
+    margin-bottom: 6px;
+  }
+  .card-title-sub {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+    margin-bottom: 20px;
+  }
+
+  /* card divider */
+  .card-divider {
+    height: 1px;
+    background: linear-gradient(90deg, #222, transparent);
+    margin-bottom: 18px;
+  }
+
+  /* intel question */
+  .card-iq-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dim);
+    margin-bottom: 6px;
+  }
+  .card-iq {
+    font-size: 12px;
+    color: var(--silver);
+    line-height: 1.65;
+    font-style: italic;
+    margin-bottom: 20px;
+  }
+
+  /* meta chips row */
+  .card-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+  .meta-chip {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+    padding: 4px 10px;
+    border: 1px solid #1e1e1e;
+    background: #0a0a0a;
+  }
+  .meta-chip-icon { font-size: 10px; opacity: 0.6; }
+
+  /* framework tags */
+  .card-frameworks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 22px;
+  }
+  .fw-tag {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid #1e1e1e;
+    color: var(--silver-dim);
+    background: #070707;
+  }
+  .fw-tag.active-fw {
+    border-color: #333;
+    color: var(--silver);
+    background: #111;
+  }
+
+  /* key findings preview */
+  .card-findings-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dim);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-findings-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #1a1a1a;
+  }
+  .finding-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #111;
+    font-size: 11px;
+    color: var(--silver);
+    line-height: 1.5;
+  }
+  .finding-row:last-child { border-bottom: none; }
+  .finding-num {
+    font-size: 9px;
+    color: var(--silver-dim);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  /* launch button */
+  .card-footer {
+    padding: 14px 28px;
+    border-top: 1px solid #111;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-footer-left {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--silver-dim);
+  }
+  .card-launch-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver);
+    padding: 7px 16px;
+    border: 1px solid #2a2a2a;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .card-launch-btn .arrow {
+    font-size: 11px;
+    transition: transform 0.2s;
+  }
+  .monitor-card:hover .card-launch-btn .arrow {
+    transform: translateX(3px);
+  }
+
+  /* ─── PLACEHOLDER CARDS ─── */
+  .monitor-card-placeholder {
+    background: #060606;
+    border: 1px dashed #161616;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #222;
+  }
+  .placeholder-icon {
+    font-size: 28px;
+    opacity: 0.3;
+  }
+  .placeholder-text {
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #252525;
+  }
+  .placeholder-id {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #1e1e1e;
+    border: 1px dashed #1a1a1a;
+    padding: 3px 10px;
+  }
+
+  /* ─── SYSTEM STATUS PANEL ─── */
+  .status-panel {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    padding: 24px 28px;
+    margin-bottom: 3px;
+  }
+  .status-panel-title {
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--silver-dim);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .status-panel-title::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: #1a1a1a;
+  }
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+  }
+  .status-item {
+    background: #080808;
+    border: 1px solid #121212;
+    padding: 14px 16px;
+  }
+  .status-item-label {
+    font-size: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dim);
+    margin-bottom: 8px;
+  }
+  .status-item-val {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--silver-bright);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .status-item-sub {
+    font-size: 9px;
+    color: var(--silver-dim);
+    letter-spacing: 1px;
+  }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    background: var(--dark);
+    border-top: 1px solid #111;
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #333;
+    margin-top: 48px;
+  }
+  .footer-center { text-align: center; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #080808; }
+  ::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #333; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .monitor-grid { grid-template-columns: 1fr; }
+    .status-grid { grid-template-columns: repeat(2, 1fr); }
+    .header { flex-direction: column; text-align: center; padding: 24px 20px; }
+    .header-right { text-align: center; }
+    .topbar, .section-bar, .main, .footer { padding-left: 20px; padding-right: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-indicator">
+      <div class="indicator-dot"></div>
+      <span>Systems Nominal</span>
+    </div>
+    <span class="section-bar-divider">|</span>
+    <span>Indo-Pacific Theater</span>
+    <span class="section-bar-divider">|</span>
+    <span>Active Monitors: 1 of 4</span>
+  </div>
+  <div class="topbar-right">
+    <span>NOMAD S.I.G.</span>
+    <span class="section-bar-divider">|</span>
+    <span class="topbar-clock" id="clock">--:--:-- UTC</span>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <!-- LOGO SVG -->
+  <div class="logo-wrap">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="g1" cx="42%" cy="38%">
+          <stop offset="0%" stop-color="#aaa"/>
+          <stop offset="50%" stop-color="#555"/>
+          <stop offset="100%" stop-color="#1a1a1a"/>
+        </radialGradient>
+        <radialGradient id="g2" cx="50%" cy="50%">
+          <stop offset="0%" stop-color="#777"/>
+          <stop offset="100%" stop-color="#2a2a2a"/>
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- outer ring -->
+      <ellipse cx="50" cy="63" rx="44" ry="10" fill="url(#g2)" opacity="0.5"/>
+      <!-- dome shadow -->
+      <ellipse cx="50" cy="62" rx="41" ry="9" fill="#111" opacity="0.9"/>
+      <!-- dome body -->
+      <path d="M 9 62 Q 9 22 50 22 Q 91 22 91 62 Z" fill="url(#g1)"/>
+      <!-- grid latitude lines -->
+      <path d="M 12 52 Q 50 46 88 52" fill="none" stroke="#888" stroke-width="0.6" opacity="0.35"/>
+      <path d="M 18 42 Q 50 36 82 42" fill="none" stroke="#888" stroke-width="0.5" opacity="0.3"/>
+      <path d="M 28 32 Q 50 27 72 32" fill="none" stroke="#888" stroke-width="0.4" opacity="0.25"/>
+      <!-- grid longitude lines -->
+      <path d="M 50 22 Q 50 62 50 62" fill="none" stroke="#888" stroke-width="0.6" opacity="0.35"/>
+      <path d="M 30 23 Q 26 42 25 62" fill="none" stroke="#888" stroke-width="0.5" opacity="0.25"/>
+      <path d="M 70 23 Q 74 42 75 62" fill="none" stroke="#888" stroke-width="0.5" opacity="0.25"/>
+      <!-- rim -->
+      <ellipse cx="50" cy="62" rx="41" ry="9" fill="none" stroke="#666" stroke-width="1" opacity="0.6"/>
+      <!-- needle -->
+      <polygon points="50,6 45.5,62 50,58 54.5,62" fill="#d0d0d0" filter="url(#glow)"/>
+      <polygon points="50,84 45.5,62 50,66 54.5,62" fill="#444"/>
+      <!-- needle tip glow -->
+      <circle cx="50" cy="8" r="2.5" fill="#e8e8e8" opacity="0.9" filter="url(#glow)"/>
+    </svg>
+  </div>
+
+  <div class="header-center">
+    <div class="header-eyebrow">Strategic Intelligence Group</div>
+    <div class="header-title">Nomad <span>S.I.G.</span></div>
+    <div class="header-sub">Intelligence Monitor Platform · Indo-Pacific Operations</div>
+  </div>
+
+  <div class="header-right">
+    <div class="stat-row">
+      <span>Date</span>
+      <span class="stat-val" id="header-date">07 APRIL 2026</span>
+    </div>
+    <div class="stat-row">
+      <span>Theater</span>
+      <span class="stat-val">Indo-Pacific</span>
+    </div>
+    <div class="stat-row">
+      <span>Classification</span>
+      <span class="stat-val">UNCLASSIFIED</span>
+    </div>
+    <div class="classif">Analytical Products</div>
+  </div>
+</div>
+
+<!-- SECTION LABEL BAR -->
+<div class="section-bar">
+  <div class="section-bar-left">
+    <span>Monitor Dashboard</span>
+    <span class="section-bar-divider">/</span>
+    <span>Active Intelligence Products</span>
+    <span class="section-bar-divider">/</span>
+    <span>April 2026 Cycle</span>
+  </div>
+  <span>All products reflect assessment as of date of publication</span>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- STATUS PANEL -->
+  <div class="status-panel">
+    <div class="status-panel-title">System Overview</div>
+    <div class="status-grid">
+      <div class="status-item">
+        <div class="status-item-label">Active Monitors</div>
+        <div class="status-item-val">01</div>
+        <div class="status-item-sub">of 4 allocated slots</div>
+      </div>
+      <div class="status-item">
+        <div class="status-item-label">Intel Products</div>
+        <div class="status-item-val">02</div>
+        <div class="status-item-sub">JSDF + Taiwan / PRC</div>
+      </div>
+      <div class="status-item">
+        <div class="status-item-label">Latest Update</div>
+        <div class="status-item-val">APR 26</div>
+        <div class="status-item-sub">07 April 2026 cycle</div>
+      </div>
+      <div class="status-item">
+        <div class="status-item-label">Frameworks</div>
+        <div class="status-item-val">06</div>
+        <div class="status-item-sub">STEMPLES · ASCOPE · ACH · CoP</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVE MONITORS HEADING -->
+  <div style="margin-top: 40px; margin-bottom: 28px;">
+    <div class="monitors-heading">
+      <div class="monitors-heading-text">Active Monitors</div>
+      <div class="monitors-heading-line"></div>
+      <div class="monitors-count">1 Active · 3 Pending</div>
+    </div>
+  </div>
+
+  <!-- MONITOR GRID -->
+  <div class="monitor-grid">
+
+    <!-- ══════════════════════════════════ -->
+    <!-- MONITOR 01 — JSDF                  -->
+    <!-- ══════════════════════════════════ -->
+    <a class="monitor-card" href="jsdf_analysis.html">
+      <div class="card-corner-accent"></div>
+      <div class="card-corner-accent-br"></div>
+      <div class="card-stripe"></div>
+      <div class="card-inner">
+        <!-- header row -->
+        <div class="card-header-row">
+          <div class="card-id-block">
+            <div class="card-id">MON-01</div>
+            <div class="card-status-badge">
+              <div class="status-dot"></div>
+              <span>Active</span>
+            </div>
+          </div>
+          <div class="card-date">07 APR 2026</div>
+        </div>
+
+        <!-- title -->
+        <div class="card-title">Japan Self-Defense Force</div>
+        <div class="card-title-sub">JSDF Strategic Transformation Assessment</div>
+        <div class="card-divider"></div>
+
+        <!-- intel question -->
+        <div class="card-iq-label">Intelligence Question</div>
+        <div class="card-iq">"How will the Japan Self-Defense Force (JSDF) evolve in the next 5 years?"</div>
+
+        <!-- meta chips -->
+        <div class="card-meta-row">
+          <div class="meta-chip"><span class="meta-chip-icon">◈</span> Japan / JSDF</div>
+          <div class="meta-chip"><span class="meta-chip-icon">◈</span> Indo-Pacific</div>
+          <div class="meta-chip"><span class="meta-chip-icon">◈</span> 5-Year Outlook</div>
+          <div class="meta-chip"><span class="meta-chip-icon">◈</span> Sino-Japanese Competition</div>
+        </div>
+
+        <!-- frameworks -->
+        <div class="card-frameworks">
+          <div class="fw-tag active-fw">STEMPLES</div>
+          <div class="fw-tag active-fw">ASCOPE / PMESII</div>
+          <div class="fw-tag active-fw">Drivers &amp; Signals</div>
+          <div class="fw-tag active-fw">Cone of Plausibility</div>
+          <div class="fw-tag active-fw">Effects</div>
+          <div class="fw-tag">ACH</div>
+        </div>
+
+        <!-- key findings -->
+        <div class="card-findings-label">Key Findings</div>
+        <div class="finding-row">
+          <span class="finding-num">01</span>
+          <span>JSDF deployed its first counter-strike capabilities on 31 March 2026 — Type 25 SSM (1,000 km) and HVGP — marking a fundamental departure from Japan's post-war denial posture.</span>
+        </div>
+        <div class="finding-row">
+          <span class="finding-num">02</span>
+          <span>JJOC established March 2025 as Japan's first unified operational command; JS Chokai modified to carry Tomahawk cruise missiles as of March 2026.</span>
+        </div>
+        <div class="finding-row">
+          <span class="finding-num">03</span>
+          <span>Record ¥9.04T ($58B) FY2026 defense budget — 12th consecutive record — set against 240% debt-to-GDP ratio, creating acute fiscal ceiling risk by FY2027–2031.</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="card-footer-left">5 analytical sections · STEMPLES · Cone of Plausibility</div>
+        <div class="card-launch-btn">Open Monitor <span class="arrow">→</span></div>
+      </div>
+    </a>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- MONITOR 01-B — TAIWAN / PRC (sub-card) -->
+    <!-- ══════════════════════════════════════ -->
+    <a class="monitor-card" href="jsdf_analysis.html" style="pointer-events: none; opacity: 0.7;">
+      <!-- styled as a companion product under MON-01 -->
+      <div class="card-corner-accent"></div>
+      <div class="card-corner-accent-br"></div>
+      <div class="card-stripe" style="background: linear-gradient(90deg, #2a2020 0%, #3a3030 40%, transparent 100%);"></div>
+      <div class="card-inner">
+        <div class="card-header-row">
+          <div class="card-id-block">
+            <div class="card-id">MON-01-B</div>
+            <div class="card-status-badge" style="color: #8a7a5a;">
+              <div class="status-dot" style="background:#5a4a2a; box-shadow: 0 0 4px #5a4a2a;"></div>
+              <span style="color:#7a6a4a;">Companion Product</span>
+            </div>
+          </div>
+          <div class="card-date">01 APR 2026</div>
+        </div>
+
+        <div class="card-title" style="font-size:18px;">Taiwan Strait &amp; PRC</div>
+        <div class="card-title-sub">China / Taiwan Invasion Probability Assessment</div>
+        <div class="card-divider"></div>
+
+        <div class="card-iq-label">Intelligence Question</div>
+        <div class="card-iq">"What is the probability and timeline of a Chinese military action against Taiwan in the 9-month horizon?"</div>
+
+        <div class="card-meta-row">
+          <div class="meta-chip"><span class="meta-chip-icon">◈</span> PRC / PLA</div>
+          <div class="meta-chip"><span class="meta-chip-icon">◈</span> Taiwan Strait</div>
+          <div class="meta-chip"><span class="meta-chip-icon">◈</span> 9-Month Horizon</div>
+          <div class="meta-chip"><span class="meta-chip-icon">◈</span> ACH Analysis</div>
+        </div>
+
+        <div class="card-frameworks">
+          <div class="fw-tag active-fw">ACH Matrix</div>
+          <div class="fw-tag active-fw">Signal Register</div>
+          <div class="fw-tag active-fw">Prioritization</div>
+          <div class="fw-tag active-fw">Action Roadmap</div>
+          <div class="fw-tag">STEMPLES</div>
+          <div class="fw-tag">Cone of Plausibility</div>
+        </div>
+
+        <div class="card-findings-label">Key Findings</div>
+        <div class="finding-row">
+          <span class="finding-num">01</span>
+          <span>ACH scoring places H3 ("Coercion / Gray-zone escalation short of invasion") as the leading hypothesis at +64.2 — significantly ahead of all invasion scenarios.</span>
+        </div>
+        <div class="finding-row">
+          <span class="finding-num">02</span>
+          <span>CMC purge of Zhang Youxia and Liu Zhenli (Jan 2026) has degraded PLA command cohesion — Eurasia Group assesses Beijing has "set aside invasion for at least two years."</span>
+        </div>
+        <div class="finding-row">
+          <span class="finding-num">03</span>
+          <span>DO NOW priority: Trump's ~$13B Taiwan arms sale delay ahead of May 14–15 Trump-Xi summit creates a discrete window of reduced deterrence credibility.</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="card-footer-left" style="color:#4a4a3a;">ACH Matrix · Signal Register · 11 signals tracked</div>
+        <div class="card-launch-btn" style="color:#555; border-color: #1e1e1e; pointer-events:none;">Integrated in MON-01</div>
+      </div>
+    </a>
+
+    <!-- PLACEHOLDER 2 -->
+    <div class="monitor-card-placeholder">
+      <div class="placeholder-icon">⊞</div>
+      <div class="placeholder-id">MON-02</div>
+      <div class="placeholder-text">Monitor Pending</div>
+    </div>
+
+    <!-- PLACEHOLDER 3 -->
+    <div class="monitor-card-placeholder">
+      <div class="placeholder-icon">⊞</div>
+      <div class="placeholder-id">MON-03</div>
+      <div class="placeholder-text">Monitor Pending</div>
+    </div>
+
+    <!-- PLACEHOLDER 4 -->
+    <div class="monitor-card-placeholder">
+      <div class="placeholder-icon">⊞</div>
+      <div class="placeholder-id">MON-04</div>
+      <div class="placeholder-text">Monitor Pending</div>
+    </div>
+
+  </div><!-- /monitor-grid -->
+
+</div><!-- /main -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <div>Nomad S.I.G. — Strategic Intelligence Group</div>
+  <div class="footer-center">Intelligence Monitor Platform · Indo-Pacific Operations · April 2026 Cycle</div>
+  <div>Analytical Products · Unclassified</div>
+</div>
+
+<script>
+  // Live UTC clock
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getUTCHours()).padStart(2,'0');
+    const m = String(now.getUTCMinutes()).padStart(2,'0');
+    const s = String(now.getUTCSeconds()).padStart(2,'0');
+    document.getElementById('clock').textContent = `${h}:${m}:${s} UTC`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Header date
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const now = new Date();
+  document.getElementById('header-date').textContent =
+    `${String(now.getUTCDate()).padStart(2,'0')} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()}`;
+</script>
+</body>
+</html>
