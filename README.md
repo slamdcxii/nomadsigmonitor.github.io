@@ -1,1 +1,1 @@
-This is a WIP real-time intelligence monitor on various environments in East Asian securty. It is an official product of Nomad Security|Intelligence|Geopolitics. More updates coming soon.
+This is a WIP real-time intelligence monitor covering various environments in East Asian security. It is an official product of Nomad Security | Intelligence | Geopolitics. More updates coming soon.
