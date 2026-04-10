@@ -6,24 +6,35 @@
 <title>China–Taiwan Military Development Monitor</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
- :root {
-    --black: #000000;
-    --dark: #0a0a0a;
-    --dark2: #111111;
-    --dark3: #1a1a1a;
-    --border: #2a2a2a;
-    --silver-dark: #888888;
-    --silver: #b0b0b0;
-    --silver-light: #cccccc;
+  :root {
+    --black:         #000000;
+    --dark:          #080808;
+    --dark2:         #0f0f0f;
+    --dark3:         #151515;
+    --dark4:         #1a1a1a;
+    --border:        #1e1e1e;
+    --border2:       #2a2a2a;
+    --silver-dim:    #555555;
+    --silver-dark:   #808080;
+    --silver:        #aaaaaa;
+    --silver-light:  #c8c8c8;
     --silver-bright: #e0e0e0;
-    --white: #f0f0f0;
-    --accent: #c0c0c0;
-    --red: #cc3333;
-    --orange: #cc7733;
-    --green: #336633;
-    --blue: #334466;
-    --glow: rgba(180,180,180,0.08);
+    --white:         #f0f0f0;
+    --accent:        #aaaaaa;
+    --red:           #995555;
+    --orange:        #997755;
+    --amber:         #998855;
+    --green:         #557755;
+    --blue:          #556688;
+    --purple:        #887799;
+    --muted:         #666666;
+    --text:          #c8c8c8;
+    --bg:            #000000;
+    --bg2:           #0f0f0f;
+    --font:          'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    --mono:          'Courier New', 'Consolas', monospace;
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -49,18 +60,19 @@
     font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
     padding: 3px 8px; border: 1px solid; border-radius: 2px;
   }
-  .badge-red { border-color: var(--red); color: var(--red); }
-  .badge-amber { border-color: var(--amber); color: var(--amber); }
-  .badge-blue { border-color: var(--accent); color: var(--accent); }
-  .badge-muted { border-color: var(--muted); color: var(--muted); }
+  .badge-red   { border-color: var(--red);    color: var(--red); }
+  .badge-amber { border-color: var(--amber);  color: var(--amber); }
+  .badge-blue  { border-color: var(--silver); color: var(--silver); }
+  .badge-muted { border-color: var(--muted);  color: var(--muted); }
 
   h1 {
     font-size: clamp(22px, 3vw, 36px);
     font-weight: 700;
-    letter-spacing: -0.5px;
+    letter-spacing: 1px;
     line-height: 1.2;
-    color: #fff;
+    color: var(--silver-bright);
     margin-bottom: 12px;
+    text-transform: uppercase;
   }
   .subtitle {
     font-size: 15px; color: var(--muted); font-style: italic; margin-bottom: 16px;
@@ -73,11 +85,12 @@
   .section { margin-bottom: 48px; }
   .section-title {
     font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+    color: var(--silver-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
   }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   h2 {
-    font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 16px; line-height: 1.3;
+    font-size: 20px; font-weight: 700; color: var(--silver-bright); margin-bottom: 16px; line-height: 1.3;
+    text-transform: uppercase; letter-spacing: 1px;
   }
 
   /* ── HYPOTHESIS SUMMARY ── */
@@ -85,24 +98,24 @@
     display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px;
   }
   .hyp-card {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 2px;
     padding: 14px 16px; position: relative; overflow: hidden;
   }
-  .hyp-card.top { border-color: var(--accent); }
+  .hyp-card.top { border-color: var(--border2); }
   .hyp-rank {
     font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase;
     letter-spacing: 0.1em; margin-bottom: 6px;
   }
-  .hyp-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; line-height: 1.3; }
+  .hyp-name { font-size: 14px; font-weight: 700; color: var(--silver-light); margin-bottom: 4px; line-height: 1.3; }
   .hyp-score { font-family: var(--mono); font-size: 22px; font-weight: 700; margin-top: 8px; }
   .hyp-bar {
-    height: 3px; background: var(--border2); border-radius: 2px; margin-top: 10px; overflow: hidden;
+    height: 3px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden;
   }
   .hyp-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
   .top-badge {
     position: absolute; top: 10px; right: 10px;
-    font-family: var(--mono); font-size: 9px; background: var(--accent); color: #000;
-    padding: 2px 6px; border-radius: 2px; letter-spacing: 0.05em;
+    font-family: var(--mono); font-size: 9px; background: var(--border2); color: var(--silver);
+    padding: 2px 6px; border-radius: 2px; letter-spacing: 0.05em; border: 1px solid var(--border2);
   }
 
   /* ── ACH CHART ── */
@@ -116,26 +129,27 @@
   }
   .matrix-table th {
     padding: 8px 10px; text-align: center; font-size: 10px; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border2);
-    white-space: nowrap;
+    text-transform: uppercase; color: var(--silver-dark); border-bottom: 1px solid var(--border2);
+    white-space: nowrap; background: var(--dark2);
   }
   .matrix-table th.left { text-align: left; }
   .matrix-table td {
     padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top;
+    background: var(--bg2);
   }
-  .matrix-table tr:hover td { background: rgba(255,255,255,0.02); }
-  .ev-label { color: var(--muted); font-size: 11px; line-height: 1.4; max-width: 300px; }
-  .cell-cc { background: rgba(248,81,73,0.2); color: #f47067; font-weight: 700; text-align: center; border-radius: 3px; }
-  .cell-c  { background: rgba(255,166,0,0.12); color: #d29922; text-align: center; border-radius: 3px; }
-  .cell-i  { background: rgba(88,166,255,0.1); color: var(--accent); text-align: center; border-radius: 3px; }
-  .cell-ii { background: rgba(88,166,255,0.18); color: #79c0ff; font-weight: 700; text-align: center; border-radius: 3px; }
+  .matrix-table tr:hover td { background: var(--dark3); }
+  .ev-label { color: var(--silver); font-size: 11px; line-height: 1.4; max-width: 300px; }
+  .cell-cc { background: rgba(153,85,85,0.2);  color: #bb7777; font-weight: 700; text-align: center; border-radius: 2px; }
+  .cell-c  { background: rgba(153,136,85,0.15); color: #aa9966; text-align: center; border-radius: 2px; }
+  .cell-i  { background: rgba(85,102,136,0.15); color: #8899aa; text-align: center; border-radius: 2px; }
+  .cell-ii { background: rgba(85,102,136,0.25); color: #99aabb; font-weight: 700; text-align: center; border-radius: 2px; }
   .cell-n  { color: var(--muted); text-align: center; }
   .cat-badge {
     font-size: 9px; padding: 2px 5px; border-radius: 2px; white-space: nowrap;
-    font-family: var(--mono);
+    font-family: var(--mono); letter-spacing: 1px; text-transform: uppercase;
   }
-  .cat-osint { background: rgba(188,140,255,0.15); color: var(--purple); }
-  .cat-geoint { background: rgba(57,211,83,0.12); color: #3fb950; }
+  .cat-osint  { background: rgba(136,119,153,0.15); color: var(--purple); border: 1px solid rgba(136,119,153,0.2); }
+  .cat-geoint { background: rgba(85,119,85,0.12);   color: #778877;       border: 1px solid rgba(85,119,85,0.2); }
 
   /* ── LEGEND ── */
   .legend-row {
@@ -148,48 +162,51 @@
   }
 
   /* ── HORIZON SCAN ── */
-  .signal-grid { display: grid; gap: 10px; }
+  .signal-grid { display: grid; gap: 2px; }
   .signal-card {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 2px;
     padding: 14px 16px; display: grid;
     grid-template-columns: auto 1fr auto;
     gap: 0 14px; align-items: start;
+    transition: background 0.2s, border-color 0.2s;
   }
+  .signal-card:hover { background: var(--dark3); border-color: var(--border2); }
   .signal-num {
     font-family: var(--mono); font-size: 11px; color: var(--muted); padding-top: 2px;
     min-width: 20px;
   }
   .signal-body {}
-  .signal-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; line-height: 1.35; }
-  .signal-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .signal-title { font-size: 13px; font-weight: 700; color: var(--silver-light); margin-bottom: 4px; line-height: 1.35; }
+  .signal-desc { font-size: 12px; color: var(--silver-dark); line-height: 1.5; }
   .signal-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; min-width: 80px; }
-  .signal-score { font-family: var(--mono); font-size: 18px; font-weight: 700; color: #fff; }
+  .signal-score { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--silver-bright); }
   .priority-badge {
     font-family: var(--mono); font-size: 9px; padding: 2px 7px; border-radius: 2px;
     text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;
+    border: 1px solid;
   }
-  .p-do-now { background: rgba(248,81,73,0.2); color: #f47067; }
-  .p-do-next { background: rgba(210,153,34,0.2); color: #d29922; }
-  .p-do-later { background: rgba(88,166,255,0.2); color: var(--accent); }
-  .p-monitor { background: rgba(139,148,158,0.2); color: var(--muted); }
+  .p-do-now  { background: rgba(153,85,85,0.15);   color: #bb7777; border-color: rgba(153,85,85,0.3); }
+  .p-do-next { background: rgba(153,136,85,0.15);  color: #aa9966; border-color: rgba(153,136,85,0.3); }
+  .p-do-later{ background: rgba(85,102,136,0.15);  color: #8899aa; border-color: rgba(85,102,136,0.3); }
+  .p-monitor { background: rgba(80,80,80,0.15);    color: var(--silver-dark); border-color: var(--border2); }
 
   .signal-cat {
     font-family: var(--mono); font-size: 9px; padding: 1px 5px; border-radius: 2px; margin-top: 4px;
-    display: inline-block;
+    display: inline-block; letter-spacing: 1px; text-transform: uppercase; border: 1px solid;
   }
-  .cat-political { background: rgba(188,140,255,0.15); color: var(--purple); }
-  .cat-military { background: rgba(248,81,73,0.15); color: #f47067; }
-  .cat-economic { background: rgba(63,185,80,0.15); color: #3fb950; }
-  .cat-tech { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .cat-political { background: rgba(136,119,153,0.12); color: var(--purple);  border-color: rgba(136,119,153,0.2); }
+  .cat-military  { background: rgba(153,85,85,0.12);   color: #aa7777;        border-color: rgba(153,85,85,0.2); }
+  .cat-economic  { background: rgba(85,119,85,0.12);   color: #778877;        border-color: rgba(85,119,85,0.2); }
+  .cat-tech      { background: rgba(85,102,136,0.12);  color: #8899aa;        border-color: rgba(85,102,136,0.2); }
 
   /* ── ASSESSMENT BOX ── */
   .assessment {
-    background: var(--bg2); border: 1px solid var(--border2); border-left: 3px solid var(--accent);
-    border-radius: 0 6px 6px 0; padding: 20px 24px; margin-top: 8px;
+    background: var(--bg2); border: 1px solid var(--border2); border-left: 3px solid var(--border2);
+    border-radius: 0 2px 2px 0; padding: 20px 24px; margin-top: 8px;
   }
   .assessment p { font-size: 14px; color: var(--text); line-height: 1.75; margin-bottom: 10px; }
   .assessment p:last-child { margin-bottom: 0; }
-  .assessment strong { color: #fff; font-weight: 700; }
+  .assessment strong { color: var(--silver-bright); font-weight: 700; }
 
   /* ── FOOTNOTE ── */
   .footnote {
@@ -198,12 +215,21 @@
   }
 
   /* ── SCORE CHART ── */
-  .score-bar-list { display: grid; gap: 8px; }
-  .score-bar-row { display: grid; grid-template-columns: 220px 1fr 60px; align-items: center; gap: 10px; }
-  .score-bar-label { font-size: 12px; color: var(--muted); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .score-bar-track { background: var(--border); border-radius: 2px; height: 8px; overflow: hidden; }
+  .score-bar-list { display: grid; gap: 2px; }
+  .score-bar-row {
+    display: grid; grid-template-columns: 220px 1fr 60px; align-items: center; gap: 10px;
+    background: var(--bg2); border: 1px solid var(--border); padding: 8px 12px;
+  }
+  .score-bar-label { font-size: 12px; color: var(--silver); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .score-bar-track { background: var(--border); border-radius: 2px; height: 6px; overflow: hidden; }
   .score-bar-fill { height: 100%; border-radius: 2px; }
-  .score-bar-val { font-family: var(--mono); font-size: 12px; color: #fff; text-align: right; }
+  .score-bar-val { font-family: var(--mono); font-size: 12px; color: var(--silver-light); text-align: right; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--dark); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #444; }
 
   @media (max-width: 600px) {
     .score-bar-row { grid-template-columns: 140px 1fr 50px; }
@@ -245,37 +271,37 @@
       <div class="hyp-card">
         <div class="hyp-rank">#5 — Least supported</div>
         <div class="hyp-name">H5: Gray-zone escalation / accidental conflict</div>
-        <div class="hyp-score" style="color:#f47067;">−14.2</div>
-        <div class="hyp-bar"><div class="hyp-bar-fill" style="width:0%; background:#f47067;"></div></div>
+        <div class="hyp-score" style="color:#bb7777;">−14.2</div>
+        <div class="hyp-bar"><div class="hyp-bar-fill" style="width:0%; background:#bb7777;"></div></div>
       </div>
 
       <div class="hyp-card">
         <div class="hyp-rank">#4</div>
         <div class="hyp-name">H1: No significant action in 2026</div>
-        <div class="hyp-score" style="color:#d29922;">9.4</div>
-        <div class="hyp-bar"><div class="hyp-bar-fill" style="width:12%; background:#d29922;"></div></div>
+        <div class="hyp-score" style="color:#aa9966;">9.4</div>
+        <div class="hyp-bar"><div class="hyp-bar-fill" style="width:12%; background:#aa9966;"></div></div>
       </div>
 
       <div class="hyp-card">
         <div class="hyp-rank">#3</div>
         <div class="hyp-name">H4: Blockade or quarantine</div>
-        <div class="hyp-score" style="color:#58a6ff;">28.5</div>
-        <div class="hyp-bar"><div class="hyp-bar-fill" style="width:36%; background:#58a6ff;"></div></div>
+        <div class="hyp-score" style="color:#8899aa;">28.5</div>
+        <div class="hyp-bar"><div class="hyp-bar-fill" style="width:36%; background:#8899aa;"></div></div>
       </div>
 
       <div class="hyp-card">
         <div class="hyp-rank">#2</div>
         <div class="hyp-name">H2: Coercion without invasion</div>
-        <div class="hyp-score" style="color:#3fb950;">33.7</div>
-        <div class="hyp-bar"><div class="hyp-bar-fill" style="width:43%; background:#3fb950;"></div></div>
+        <div class="hyp-score" style="color:#778877;">33.7</div>
+        <div class="hyp-bar"><div class="hyp-bar-fill" style="width:43%; background:#778877;"></div></div>
       </div>
 
       <div class="hyp-card top">
         <div class="top-badge">MOST SUPPORTED</div>
         <div class="hyp-rank">#1 — Best supported</div>
         <div class="hyp-name">H3: Continued military build-up / preparation</div>
-        <div class="hyp-score" style="color:#fff;">64.2</div>
-        <div class="hyp-bar"><div class="hyp-bar-fill" style="width:100%; background:var(--accent);"></div></div>
+        <div class="hyp-score" style="color:var(--silver-bright);">64.2</div>
+        <div class="hyp-bar"><div class="hyp-bar-fill" style="width:100%; background:var(--silver-dark);"></div></div>
       </div>
 
     </div>
@@ -301,19 +327,19 @@
 
     <div class="legend-row">
       <div class="legend-item">
-        <div class="legend-swatch" style="background:rgba(248,81,73,0.2); color:#f47067;">CC</div>
+        <div class="legend-swatch" style="background:rgba(153,85,85,0.2); color:#bb7777;">CC</div>
         Strongly consistent
       </div>
       <div class="legend-item">
-        <div class="legend-swatch" style="background:rgba(255,166,0,0.12); color:#d29922;">C</div>
+        <div class="legend-swatch" style="background:rgba(153,136,85,0.15); color:#aa9966;">C</div>
         Consistent
       </div>
       <div class="legend-item">
-        <div class="legend-swatch" style="background:rgba(88,166,255,0.18); color:#79c0ff;">II</div>
+        <div class="legend-swatch" style="background:rgba(85,102,136,0.25); color:#99aabb;">II</div>
         Strongly inconsistent
       </div>
       <div class="legend-item">
-        <div class="legend-swatch" style="background:rgba(88,166,255,0.1); color:#58a6ff;">I</div>
+        <div class="legend-swatch" style="background:rgba(85,102,136,0.15); color:#8899aa;">I</div>
         Inconsistent
       </div>
       <div class="legend-item">
@@ -463,8 +489,11 @@ const scoreList = document.getElementById('scoreBarList');
 const sorted = [...SIGNALS].sort((a,b) => b.score - a.score);
 const maxScore = sorted[0].score;
 sorted.forEach(s => {
+  const color = s.priority === 'DO NOW'  ? '#bb7777'
+              : s.priority === 'DO NEXT' ? '#aa9966'
+              : s.priority === 'DO LATER'? '#8899aa'
+              :                            '#555555';
   const pct = Math.round((s.score / maxScore) * 100);
-  const color = s.priority === 'DO NOW' ? '#f47067' : s.priority === 'DO NEXT' ? '#d29922' : s.priority === 'DO LATER' ? '#58a6ff' : '#8b949e';
   const div = document.createElement('div');
   div.className = 'score-bar-row';
   div.innerHTML = `
@@ -482,8 +511,8 @@ new Chart(document.getElementById('hypChart'), {
     datasets: [{
       label: 'ACH composite score',
       data: [-14.242, 9.414, 28.484, 33.656, 64.242],
-      backgroundColor: ['#f47067','#d29922','#58a6ff','#3fb950','#79c0ff'],
-      borderRadius: 3,
+      backgroundColor: ['#884444', '#887744', '#556688', '#557755', '#888888'],
+      borderRadius: 2,
     }]
   },
   options: {
@@ -492,17 +521,25 @@ new Chart(document.getElementById('hypChart'), {
     plugins: {
       legend: { display: false },
       tooltip: {
-        callbacks: {
-          label: ctx => ` Score: ${ctx.parsed.y.toFixed(1)}`
-        }
+        backgroundColor: '#111111',
+        borderColor: '#2a2a2a',
+        borderWidth: 1,
+        titleColor: '#c8c8c8',
+        bodyColor: '#888888',
+        titleFont: { family: 'Courier New', size: 11 },
+        bodyFont:  { family: 'Courier New', size: 11 },
+        callbacks: { label: ctx => ` Score: ${ctx.parsed.y.toFixed(1)}` }
       }
     },
     scales: {
-      x: { ticks: { color: '#8b949e', font: { family: 'Courier New', size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      x: {
+        ticks: { color: '#666666', font: { family: 'Courier New', size: 11 } },
+        grid:  { color: 'rgba(255,255,255,0.03)' }
+      },
       y: {
-        ticks: { color: '#8b949e', font: { family: 'Courier New', size: 11 } },
-        grid: { color: 'rgba(255,255,255,0.05)' },
-        title: { display: true, text: 'Composite score', color: '#8b949e', font: { family: 'Courier New', size: 10 } }
+        ticks: { color: '#666666', font: { family: 'Courier New', size: 11 } },
+        grid:  { color: 'rgba(255,255,255,0.03)' },
+        title: { display: true, text: 'Composite score', color: '#666666', font: { family: 'Courier New', size: 10 } }
       }
     }
   }
