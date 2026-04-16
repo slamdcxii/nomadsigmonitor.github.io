@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSDF Strategic Forecast — April 2026</title>
+<title>JSDF Strategic Intelligence Analysis — NOMAD S.I.G.</title>
 <style>
   :root {
     --black: #000000;
@@ -470,7 +470,355 @@
   ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #555; }
 
+  /* ── LIVE DEVELOPMENT MONITOR ── */
+  .monitor-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 3px;
+    align-items: start;
+  }
+  .monitor-feed-wrap { min-width: 0; }
+  .monitor-sidebar { position: sticky; top: 20px; }
+
+  /* search + controls bar */
+  .monitor-controls {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 3px;
+  }
+  .monitor-search-wrap {
+    flex: 1;
+    position: relative;
+  }
+  .monitor-search {
+    width: 100%;
+    background: var(--dark2);
+    border: 1px solid #222;
+    color: var(--silver-light);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    padding: 10px 14px 10px 36px;
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .monitor-search::placeholder { color: #444; }
+  .monitor-search:focus { border-color: #444; }
+  .search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #444;
+    pointer-events: none;
+  }
+  .monitor-btn {
+    background: var(--dark2);
+    border: 1px solid #222;
+    color: var(--silver-dark);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .monitor-btn:hover { border-color: #444; color: var(--silver-light); }
+  .monitor-btn.active-filter { border-color: #555; color: var(--silver-bright); background: #161616; }
+
+  /* filter chips */
+  .filter-row {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filter-chip {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid #1e1e1e;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--dark2);
+    user-select: none;
+  }
+  .filter-chip:hover { border-color: #333; color: var(--silver-dark); }
+  .filter-chip.on { border-color: #444; color: var(--silver-light); background: #161616; }
+  .filter-chip.cat-mil  { --chip-color: #8899aa; }
+  .filter-chip.cat-pol  { --chip-color: #aa9977; }
+  .filter-chip.cat-eco  { --chip-color: #778877; }
+  .filter-chip.cat-tech { --chip-color: #8899bb; }
+  .filter-chip.cat-leg  { --chip-color: #997799; }
+  .filter-chip.on { border-color: var(--chip-color); color: var(--chip-color); }
+
+  /* status bar */
+  .monitor-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #060606;
+    border: 1px solid #161616;
+    margin-bottom: 3px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+  }
+  .status-live {
+    display: flex; align-items: center; gap: 6px;
+    color: #557755;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #446644;
+    animation: live-pulse 2s ease-in-out infinite;
+  }
+  @keyframes live-pulse {
+    0%,100% { opacity:1; box-shadow: 0 0 4px #446644; }
+    50%      { opacity:0.5; box-shadow: 0 0 8px #558855; }
+  }
+  .status-count { color: #444; }
+  .status-last-refresh { color: #383838; font-family: 'Courier New', monospace; }
+
+  /* feed */
+  .dev-feed { display: flex; flex-direction: column; gap: 2px; }
+
+  .dev-item {
+    background: var(--dark2);
+    border: 1px solid #1a1a1a;
+    border-left: 2px solid #2a2a2a;
+    padding: 14px 16px;
+    transition: background 0.2s, border-color 0.2s;
+    cursor: default;
+  }
+  .dev-item:hover { background: #131313; border-color: #2e2e2e; }
+  .dev-item.hidden { display: none; }
+
+  /* severity left-border colors */
+  .dev-item.sev-high     { border-left-color: #774444; }
+  .dev-item.sev-medium   { border-left-color: #776644; }
+  .dev-item.sev-low      { border-left-color: #445566; }
+  .dev-item.sev-watch    { border-left-color: #446644; }
+
+  .dev-item-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 7px;
+  }
+  .dev-item-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--silver-light);
+    line-height: 1.4;
+    flex: 1;
+  }
+  .dev-item-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .dev-item-date {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #444;
+    font-family: 'Courier New', monospace;
+    white-space: nowrap;
+  }
+  .dev-item-body {
+    font-size: 12px;
+    color: var(--silver-dark);
+    line-height: 1.65;
+    margin-bottom: 10px;
+  }
+  .dev-item-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .dev-cat-badge {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border: 1px solid;
+  }
+  .dev-cat-mil  { color: #8899aa; border-color: #334455; }
+  .dev-cat-pol  { color: #aa9977; border-color: #554433; }
+  .dev-cat-eco  { color: #778877; border-color: #334433; }
+  .dev-cat-tech { color: #8899bb; border-color: #334466; }
+  .dev-cat-leg  { color: #997799; border-color: #443355; }
+
+  .dev-sev-badge {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border: 1px solid;
+  }
+  .dev-sev-badge.sev-high   { color: #aa6666; border-color: #553333; }
+  .dev-sev-badge.sev-medium { color: #aa9966; border-color: #554433; }
+  .dev-sev-badge.sev-low    { color: #7788aa; border-color: #334455; }
+  .dev-sev-badge.sev-watch  { color: #668866; border-color: #334433; }
+
+  .dev-source {
+    font-size: 9px;
+    color: #383838;
+    letter-spacing: 1px;
+    font-family: 'Courier New', monospace;
+    margin-left: auto;
+  }
+
+  /* loading skeleton */
+  .feed-loading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .skeleton-item {
+    background: var(--dark2);
+    border: 1px solid #1a1a1a;
+    padding: 14px 16px;
+    animation: skeleton-pulse 1.8s ease-in-out infinite;
+  }
+  .skeleton-line {
+    height: 10px;
+    background: #1a1a1a;
+    border-radius: 1px;
+    margin-bottom: 8px;
+  }
+  @keyframes skeleton-pulse {
+    0%,100% { opacity: 0.6; }
+    50%      { opacity: 1; }
+  }
+
+  /* error state */
+  .feed-error {
+    background: var(--dark2);
+    border: 1px solid #2a1a1a;
+    border-left: 2px solid #553333;
+    padding: 20px 24px;
+    font-size: 12px;
+    color: #775555;
+    line-height: 1.7;
+  }
+  .feed-error strong { color: #996666; }
+
+  /* AI analysis panel */
+  .ai-panel {
+    background: var(--dark2);
+    border: 1px solid #1e1e1e;
+  }
+  .ai-panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ai-panel-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+  }
+  .ai-panel-badge {
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 2px 8px;
+    border: 1px solid #223322;
+    color: #557755;
+  }
+  .ai-panel-body { padding: 16px; }
+  .ai-analyze-btn {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid #222;
+    color: var(--silver-dark);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .ai-analyze-btn:hover:not(:disabled) {
+    border-color: #444;
+    color: var(--silver-light);
+    background: #111;
+  }
+  .ai-analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ai-output {
+    font-size: 12px;
+    color: var(--silver);
+    line-height: 1.75;
+    min-height: 60px;
+  }
+  .ai-output.thinking { color: #444; font-style: italic; }
+  .ai-output strong { color: var(--silver-bright); font-weight: 600; }
+
+  /* trend chips */
+  .trend-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #1a1a1a;
+  }
+  .trend-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    background: #0a0a0a;
+    border: 1px solid #161616;
+    font-size: 10px;
+  }
+  .trend-chip-label { color: var(--silver-dark); letter-spacing: 1px; }
+  .trend-chip-val   { color: var(--silver); font-family: 'Courier New', monospace; letter-spacing: 1px; }
+
+  /* pagination */
+  .feed-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    margin-top: 12px;
+  }
+  .page-btn {
+    background: var(--dark2);
+    border: 1px solid #1e1e1e;
+    color: #555;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .page-btn:hover:not(:disabled) { border-color: #333; color: var(--silver-dark); }
+  .page-btn:disabled { opacity: 0.3; cursor: default; }
+  .page-info { font-size: 10px; color: #444; letter-spacing: 1px; padding: 6px 10px; }
+
   @media (max-width: 1100px) {
+    .monitor-layout { grid-template-columns: 1fr; }
+    .monitor-sidebar { position: static; }
     .stemples-grid { grid-template-columns: repeat(2, 1fr); }
     .drivers-grid { grid-template-columns: 1fr; }
     .outcomes-grid { grid-template-columns: 1fr; }
@@ -541,6 +889,7 @@
   <div class="nav-tab" onclick="showTab('drivers')">Drivers & Signals</div>
   <div class="nav-tab" onclick="showTab('cone')">Cone of Plausibility</div>
   <div class="nav-tab" onclick="showTab('effects')">Effects & Outcomes</div>
+  <div class="nav-tab" onclick="showTab('devmonitor')">⬤ Live Monitor</div>
 </div>
 
 <!-- ===================== STEMPLES ===================== -->
@@ -561,26 +910,26 @@
     <!-- SOCIAL -->
     <div class="stemples-cell">
       <div class="stemples-entry"><span class="stemples-num">1.</span> Japan's JSDF faces a structural manpower crisis driven by demographic decline: the recruitment-age population (18–26) has fallen from 14 million in 1994 to approximately 10.5 million today, chronically missing recruitment targets by as much as 50%, with approximately 37% of active personnel over age 40.</div>
-      <div class="stemples-entry"><span class="stemples-num">2.</span> The Defense Build-up Program mandates 50,000 qualified cyber professionals by 2030 against a current estimated shortage of approximately 190,000 cybersecurity workers. This gap could undermine the credibility of Japan's new offensive cyber posture.</div>
+      <div class="stemples-entry"><span class="stemples-num">2.</span> The Defense Build-up Program mandates 50,000 qualified cyber professionals by 2030 against a current estimated shortage of approximately 190,000 cybersecurity workers — a gap that could undermine the credibility of Japan's new offensive cyber posture.</div>
       <div class="stemples-entry"><span class="stemples-num">3.</span> In December 2025, hundreds of Japanese citizens rallied outside the Prime Minister's Office demanding retraction of PM Takaichi's Taiwan remarks, reflecting persistent public ambivalence toward offensive military expansion and a societal constraint on the pace of JSDF transformation.</div>
     </div>
     <!-- TECHNOLOGICAL -->
     <div class="stemples-cell">
-      <div class="stemples-entry"><span class="stemples-num">1.</span> Japan approved ¥100 billion ($640M) to develop and deploy SHIELD (Synchronized Hybrid Integrated Littoral Defense), a networked array of unmanned aerial, surface, and underwater drones. It is targeted for March 2028 operational deployment with initial acquisitions expected from Turkish or Israeli vendors.</div>
-      <div class="stemples-entry"><span class="stemples-num">2.</span> In May 2025, Japan enacted the Active Cyber Defense (ACD) Law, and in March 2026 announced JSDF offensive cyber operations will commence as early as October 1, 2026. This would theoretically enable the JSDF to disable adversary servers, marking Japan's formal departure from its passive, reactive cybersecurity posture.</div>
+      <div class="stemples-entry"><span class="stemples-num">1.</span> Japan approved ¥100 billion ($640M) to develop and deploy SHIELD (Synchronized Hybrid Integrated Littoral Defense) — a networked array of unmanned aerial, surface, and underwater drones — targeted for March 2028 operational deployment, with initial acquisitions expected from Turkish or Israeli vendors.</div>
+      <div class="stemples-entry"><span class="stemples-num">2.</span> In May 2025, Japan enacted the Active Cyber Defense (ACD) Law, and in March 2026 announced JSDF offensive cyber operations will commence as early as October 1, 2026 — enabling the JSDF to disable adversary servers, marking Japan's formal departure from its passive, reactive cybersecurity posture.</div>
     </div>
     <!-- ENVIRONMENTAL -->
     <div class="stemples-cell">
-      <div class="stemples-entry"><span class="stemples-num">1.</span> Construction of Japan's military base on Mageshima Island has accelerated dramatically since 2023. Satellite imagery from September 2025 shows a 2,000-meter runway, ammunition depots, fuel storage, and a pier for large warships now taking shape.</div>
+      <div class="stemples-entry"><span class="stemples-num">1.</span> Construction of Japan's military base on Mageshima Island — Japan's second-largest uninhabited island at the mouth of the Osumi Strait — has accelerated dramatically since 2023. Satellite imagery from September 2025 shows a 2,000-meter runway, ammunition depots, fuel storage, and a pier for large warships now taking shape.</div>
     </div>
     <!-- MILITARY -->
     <div class="stemples-cell">
-      <div class="stemples-entry"><span class="stemples-num">1.</span> On March 24, 2025, Japan established the Japan Joint Operations Command (JJOC), transferring authority to a new four-star Commander and centralizing joint warfighting and improving interoperability with U.S. Indo-Pacific Command.</div>
+      <div class="stemples-entry"><span class="stemples-num">1.</span> On March 24, 2025, Japan established the Japan Joint Operations Command (JJOC) — its first unified operational command — transferring authority to a new four-star Commander, centralizing joint warfighting and improving interoperability with U.S. Indo-Pacific Command.</div>
       <div class="stemples-entry"><span class="stemples-num">2.</span> On March 31, 2026, Japan deployed the Type 25 Surface-to-Ship Missile (range: 1,000 km) and the Type 25 Hyper-Velocity Gliding Projectile (HVGP), marking Japan's first operational counter-strike capabilities.</div>
       <div class="stemples-entry"><span class="stemples-num">3.</span> On March 23, 2026, the JSDF underwent large-scale restructuring, including JMSDF reforms, expansion of space operations units (Space Operations Group upgrading to a Wing, 310 to 670 personnel), and establishment of new intelligence units.</div>
-      <div class="stemples-entry"><span class="stemples-num">4.</span> JS Chokai (DDG-176) became Japan's first warship capable of firing U.S. Tomahawk cruise missiles as of late March 2026 following modifications at Naval Base San Diego. This is the first in JSDF history.</div>
-      <div class="stemples-entry"><span class="stemples-num">5.</span> Japan's MOD Expert Panel recommended in September 2025 that Tokyo consider nuclear reactors for future submarines. The JMSDF chief of staff publicly endorsed the concept in January 2026, placing nuclear submarine acquisition on the active policy agenda.</div>
-      <div class="stemples-entry"><span class="stemples-num">6.</span> In FY2026, the JGSDF will establish the 15th Division in Okinawa (expanding from ~2,300 to ~3,900 personnel) and a new Special Operations Brigade, both oriented toward southwestern island defense.</div>
+      <div class="stemples-entry"><span class="stemples-num">4.</span> JS Chokai (DDG-176) became Japan's first warship capable of firing U.S. Tomahawk cruise missiles as of late March 2026 following modifications at Naval Base San Diego — the first sea-based standoff strike capability in JSDF history.</div>
+      <div class="stemples-entry"><span class="stemples-num">5.</span> Japan's MOD Expert Panel recommended in September 2025 that Tokyo consider nuclear reactors for future submarines; the JMSDF chief of staff publicly endorsed the concept in January 2026, placing nuclear submarine acquisition on the active policy agenda.</div>
+      <div class="stemples-entry"><span class="stemples-num">6.</span> In FY2026, the JGSDF will establish the 15th Division in Okinawa (expanding from ~2,300 to ~3,900 personnel) and a new Special Operations Brigade — both oriented toward southwestern island defense.</div>
     </div>
   </div>
 
@@ -593,23 +942,23 @@
   <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:3px;">
     <!-- POLITICAL -->
     <div class="stemples-cell">
-      <div class="stemples-entry"><span class="stemples-num">1.</span> Japan's 2022 National Security Strategy identified China as "the greatest strategic challenge." Under PM Takaichi, Tokyo has signaled potential military involvement in a Taiwan contingency, calling a Chinese attack "an existential threat" to Japan.</div>
-      <div class="stemples-entry"><span class="stemples-num">2.</span> Japan's LDP-Komeito coalition collapsed after the October 2024 elections, and since then PM Takaichi's government has partnered with the hawkish Japan Innovation Party (JIP) and removed the pacifist brake that Komeito had long applied to defense ambitions. Japan now plans a full NSS revision by December 2026.</div>
+      <div class="stemples-entry"><span class="stemples-num">1.</span> Japan's 2022 National Security Strategy — its first ever — identified China as "the greatest strategic challenge." Under PM Takaichi (in power by late 2025), Tokyo has signaled potential military involvement in a Taiwan contingency, calling a Chinese attack "an existential threat" to Japan.</div>
+      <div class="stemples-entry"><span class="stemples-num">2.</span> Japan's LDP-Komeito coalition collapsed after the October 2024 elections; PM Takaichi's government has partnered with the hawkish Japan Innovation Party (JIP) — removing the pacifist brake that Komeito had long applied to defense ambitions. Japan now plans a full NSS revision by December 2026.</div>
     </div>
     <!-- LEGAL -->
     <div class="stemples-cell">
       <div class="stemples-entry"><span class="stemples-num">1.</span> In July 2014, PM Abe's cabinet reinterpreted Article 9 to permit collective self-defense; the National Diet codified this in September 2015 through the Legislation for Peace and Security, fundamentally expanding the legal mandate of the JSDF.</div>
-      <div class="stemples-entry"><span class="stemples-num">2.</span> Japan's Takaichi government is actively pursuing abolition of the current five-category restriction on lethal defense equipment exports. This could be signaling a transition from domestic-only posture to an export-oriented model with regional alliance-building implications.</div>
+      <div class="stemples-entry"><span class="stemples-num">2.</span> Japan's Takaichi government is actively pursuing abolition of the current five-category restriction on lethal defense equipment exports — signaling a transition from domestic-only posture to an export-oriented model with regional alliance-building implications.</div>
     </div>
     <!-- ECONOMIC -->
     <div class="stemples-cell">
-      <div class="stemples-entry"><span class="stemples-num">1.</span> Japan's FY2026 defense budget reached a record ¥9.04 trillion ($58B) marking the 4th year of a five-year Defense Buildup Program targeting 2% of GDP by FY2027. It is also 65% increase from FY2022 levels.</div>
+      <div class="stemples-entry"><span class="stemples-num">1.</span> Japan's FY2026 defense budget reached a record ¥9.04 trillion ($58B) — the 12th consecutive record — marking the 4th year of a five-year Defense Buildup Program targeting 2% of GDP by FY2027, a 65% increase from FY2022 levels.</div>
       <div class="stemples-entry"><span class="stemples-num">2.</span> Australia selected Mitsubishi Heavy Industries' Mogami-class frigate to replace 11 ANZAC-class ships. Japan is investing over ¥160 billion annually in the trilateral GCAP sixth-generation fighter program with the UK and Italy.</div>
-      <div class="stemples-entry"><span class="stemples-num">3.</span> Japan's FY2026 budget allocates ¥21.3 trillion in stimulus alongside ¥9.04 trillion in defense, but Japan's debt-to-GDP ratio is nearly 240%, creating acute structural tension between the defense buildup and fiscal sustainability.</div>
+      <div class="stemples-entry"><span class="stemples-num">3.</span> Japan's FY2026 budget allocates ¥21.3 trillion in stimulus alongside ¥9.04 trillion in defense, but Japan's debt-to-GDP ratio is nearly 240% — the highest among advanced economies — creating acute structural tension between the defense buildup and fiscal sustainability.</div>
     </div>
     <!-- SECURITY -->
     <div class="stemples-cell">
-      <div class="stemples-entry"><span class="stemples-num">1.</span> In December 2025, Chinese aircraft from a carrier strike group near southwestern Japan locked fire-control radar onto Japanese aircraft, prompting a formal Tokyo protest and accelerating MOD establishment of a dedicated office to monitor China's Pacific operations.</div>
+      <div class="stemples-entry"><span class="stemples-num">1.</span> In December 2025, Chinese aircraft from a carrier strike group near southwestern Japan locked fire-control radar onto Japanese aircraft — a provocative act considered possible preparation for missile engagement — prompting a formal Tokyo protest and accelerating MOD establishment of a dedicated office to monitor China's Pacific operations.</div>
     </div>
   </div>
 </div>
@@ -636,7 +985,7 @@
       <tr>
         <td class="row-header">AREAS</td>
         <td>Japan's geopolitical relation to Taiwan has been a major contributing factor to the military buildup. The rate of Japan's military power growth is positively correlated with the perceived risk of Taiwan's annexation by China.</td>
-        <td>Japan's southwestern island (Kyushu, Amami-Oshima, Okinawa, Miyako, Ishigaki, and Yonaguni [only ~110 km from Taiwan]) — is the decisive operational geography driving JSDF transformation. In December 2025, Chinese bombers transited the Okinawa-Miyako gap during Taiwan Strait exercises, operationally validating the archipelago's role as the primary axis of potential conflict.</td>
+        <td>Japan's southwestern island chain — spanning Kyushu, Amami-Oshima, Okinawa, Miyako, Ishigaki, and Yonaguni (only ~110 km from Taiwan) — is the decisive operational geography driving JSDF transformation. In December 2025, Chinese bombers transited the Okinawa-Miyako gap during Taiwan Strait exercises, operationally validating the archipelago's role as the primary axis of potential conflict.</td>
         <td colspan="2" style="color:var(--silver-dark); font-style:italic; font-size:10px;">—</td>
         <td style="color:var(--silver-dark); font-style:italic; font-size:10px;">—</td>
       </tr>
@@ -649,8 +998,8 @@
       </tr>
       <tr>
         <td class="row-header">CAPABILITIES</td>
-        <td>Despite Article 9's "Peace Clause," Japan has built one of the world's most formidable military forces. This is a contradiction that continues to influence Japanese foreign policy.</td>
-        <td>JSDF landmark capability expansion March 31, 2026: Type 25 SSM (1,000 km range), Type 25 HVGP deployed. JS Chokai modified for Tomahawk at Naval Base San Diego. FY2026 allocates $6.2 billion to standoff missiles, shifting Japan from denial to strike-capable posture.</td>
+        <td>Despite Article 9's "Peace Clause," Japan has built one of the world's most formidable military forces — a contradiction that continues to influence Japanese foreign policy.</td>
+        <td>JSDF landmark capability expansion March 31, 2026: Type 25 SSM (1,000 km range), Type 25 HVGP deployed. JS Chokai modified for Tomahawk at Naval Base San Diego — first sea-based standoff strike. FY2026 allocates $6.2 billion to standoff missiles, shifting Japan from denial to strike-capable posture.</td>
         <td>GCAP faces compounding risk: development costs reportedly tripled, contract between GIGO and Edgewing JV unsigned as of March 2026. Retired JASDF Lt. Gen. Fukazawa warned delays "would impact negatively on Japan's overall defense posture." F-2 replacement timeline creates a hard forcing function.</td>
         <td>ACD Law (May 2025) authorizes preemptive infiltration of foreign servers; JSDF offensive cyber operations commence October 1, 2026. JMSDF's new Information Warfare/Operations Command oversees cyber operations. The 2020 Chinese hack of JMSDF networks revealed significant vulnerabilities this command is designed to address.</td>
         <td style="color:var(--silver-dark); font-style:italic; font-size:10px;">—</td>
@@ -674,7 +1023,7 @@
         <td class="row-header">EVENTS</td>
         <td>PM Takaichi's hint that Taiwan invasion could evoke "collective security crisis" has severely increased Sino-Japanese tensions. Beijing placed 40 Japanese defense entities on an export control list (Jan 2026), banned dual-use goods, curtailed ~$11B/year in Chinese tourism, and withdrew giant pandas from Ueno Zoo.</td>
         <td style="color:var(--silver-dark); font-style:italic; font-size:10px;">—</td>
-        <td>Japan's FY2026 defense budget of ¥9.04 trillion is set against a debt-to-GDP ratio of ~240%, which is by far the highest among advanced economies. Simultaneously investing over ¥160B in GCAP, ¥100B in SHIELD, absorbing Mogami production constraints. South Korea and Taiwan signal 3.5% GDP defense targets that could erode Japan's relative position if fiscal pressures force a slowdown after FY2027.</td>
+        <td>Japan's FY2026 defense budget of ¥9.04 trillion is set against a debt-to-GDP ratio of ~240% — the highest among advanced economies. Simultaneously investing over ¥160B in GCAP, ¥100B in SHIELD, absorbing Mogami production constraints. South Korea and Taiwan signal 3.5% GDP defense targets that could erode Japan's relative position if fiscal pressures force a slowdown after FY2027.</td>
         <td>The election of Sanae Takaichi as PM indicates Japanese conservatives are increasing control in the Diet, which could lead to further bolstering of military strength.</td>
         <td style="color:var(--silver-dark); font-style:italic; font-size:10px;">—</td>
       </tr>
@@ -694,61 +1043,61 @@
 
     <div class="driver-card">
       <div class="driver-cat badge badge-military">Military</div>
-      <div class="driver-text">Sustained Sino-Japanese strategic competition driven by China's accelerating naval power projection into Japan's near-abroad, observable through dual-carrier operations near Iwo Jima (June 2025), radar lock-on incidents involving JASDF aircraft (December 2025), and PLA Coast Guard helicopter incursions, compels Tokyo to continuously recalibrate JSDF force structure, basing density, and counterstrike readiness.</div>
+      <div class="driver-text">Sustained Sino-Japanese strategic competition driven by China's accelerating naval power projection into Japan's near-abroad — observable through dual-carrier operations near Iwo Jima (June 2025), radar lock-on incidents involving JASDF aircraft (December 2025), and PLA Coast Guard helicopter incursions — compelling Tokyo to continuously recalibrate JSDF force structure, basing density, and counterstrike readiness.</div>
       <div class="driver-signals">Linked Signals: <span>Type 25 SSM/HVGP deployments · GCAP demonstrator flight ~2027 · 15th Division / SOB establishment in FY2026</span></div>
     </div>
 
     <div class="driver-card">
       <div class="driver-cat badge badge-military">Military</div>
-      <div class="driver-text">The parallel establishment of JJOC (March 2025) and upgrade of USFJ to a Joint Force HQ is transitioning the alliance from a host-nation support model to a genuinely integrated warfighting partnership, progressively rebalancing roles, missions, and autonomous action thresholds for the JSDF, and also deepening institutionalization of the Japan–US Combined Command architecture</div>
+      <div class="driver-text">Deepening institutionalization of the Japan–US Combined Command architecture — driven by the parallel establishment of JJOC (March 2025) and upgrade of USFJ to a Joint Force HQ — transitioning the alliance from a host-nation support model to a genuinely integrated warfighting partnership, progressively rebalancing roles, missions, and autonomous action thresholds for the JSDF.</div>
       <div class="driver-signals">Linked Signals: <span>JASDF renamed to Air and Space SDF · Information Warfare/Ops Command activation · Article 9 revision progress · SHIELD milestones</span></div>
     </div>
 
     <div class="driver-card">
       <div class="driver-cat badge badge-social">Social / Demographic</div>
-      <div class="driver-text">Japan's irreversible demographic contraction is accelerating the structural transition from manpower-centric to technology-centric force design. The JSDF's prime recruitment-age cohort (18–26) is projected to fall from approximately 9 million (2020) to 7.2 million by 2040, driving mandatory investment in crew-reduced vessels, autonomous systems, and AI-enabled logistics.</div>
+      <div class="driver-text">Japan's irreversible demographic contraction accelerating the structural transition from manpower-centric to technology-centric force design — with the JSDF's prime recruitment-age cohort (18–26) projected to fall from approximately 9 million (2020) to 7.2 million by 2040, driving mandatory investment in crew-reduced vessels, autonomous systems, and AI-enabled logistics.</div>
       <div class="driver-signals">Linked Signals: <span>Type 25 SSM/HVGP deployments · Information Warfare Command activation · JSDF offensive cyber ops Oct 1, 2026 · SHIELD system milestones</span></div>
     </div>
 
     <div class="driver-card">
       <div class="driver-cat badge badge-economic">Economic</div>
-      <div class="driver-text">Japan is emerging as a tier-one defense exporter and co-developer. This is defined by progressive relaxation of arms export restrictions since 2014, the Australia Mogami-class frigate selection (August 2025), GCAP co-development with the UK and Italy, and pending export bids to India and Canada. JSDF capability development toward interoperability-standardized platforms is already being reshaped.</div>
+      <div class="driver-text">Japan's emergence as a tier-one defense exporter and co-developer — catalyzed by progressive relaxation of arms export restrictions since 2014, the Australia Mogami-class frigate selection (August 2025), GCAP co-development with the UK and Italy, and pending export bids to India and Canada — reshaping JSDF capability development toward interoperability-standardized platforms.</div>
       <div class="driver-signals">Linked Signals: <span>Type 25 SSM/HVGP deployment · Offensive cyber ops · SHIELD procurements · RAN Mogami production at MHI Nagasaki · JMSDF Maritime Transport Group expansion</span></div>
     </div>
 
     <div class="driver-card">
       <div class="driver-cat badge badge-legal">Legal / Political</div>
-      <div class="driver-text">PM Takaichi's National Security Strategy revision (December 2026 deadline) and prospective Article 9 constitutional revision is functioning as a sustained legal-political driver, sequentially dismantling post-war normative constraints on the JSDF's operational identity, expanding the legal basis for preemptive cyber operations (October 2026), collective self-defense, and ultimately the formal designation of the JSDF as a conventional military force.</div>
+      <div class="driver-text">PM Takaichi's National Security Strategy revision (December 2026 deadline) and prospective Article 9 constitutional revision functioning as a sustained legal-political driver — sequentially dismantling post-war normative constraints on the JSDF's operational identity, expanding the legal basis for preemptive cyber operations (October 2026), collective self-defense, and ultimately the formal designation of the JSDF as a conventional military force.</div>
       <div class="driver-signals">Linked Signals: <span>Type 25 SSM/HVGP · JASDF renamed · Art. 9 revision progress · SHIELD · GCAP demonstrator ~2027 · DBP budget milestones · ODA strategy</span></div>
     </div>
 
     <div class="driver-card">
       <div class="driver-cat badge badge-political">Political (US)</div>
-      <div class="driver-text">Sustained US pressure, reinforced by the Trump administration's "America First" burden-sharing demands, is compelling Japan to accelerate autonomous defense investment beyond initially planned DBP timelines while simultaneously introducing alliance friction risk as Tokyo acquires offensive capabilities (Tomahawk, JASSM-ER, Type 25 SSM/HVGP) that reduce dependence on extended US deterrence.</div>
+      <div class="driver-text">Sustained US pressure — reinforced by the Trump administration's "America First" burden-sharing demands — compelling Japan to accelerate autonomous defense investment beyond initially planned DBP timelines, while simultaneously introducing alliance friction risk as Tokyo acquires offensive capabilities (Tomahawk, JASSM-ER, Type 25 SSM/HVGP) that reduce dependence on extended US deterrence.</div>
       <div class="driver-signals">Linked Signals: <span>Type 25 SSM/HVGP deployment · JASDF renamed · SHIELD milestones · GCAP demonstrator flight</span></div>
     </div>
 
     <div class="driver-card">
       <div class="driver-cat badge badge-tech">Technological</div>
-      <div class="driver-text">The growing institutionalization of space as a primary JSDF warfighting domain is being anchored by the JASDF's formal renaming to the Japan Air and Space SDF (FY2026), the expansion of the Space Operations Group at Fuchu in coordination with US Space Forces-Japan at Yokota Air Base, and the planned deployment of a small satellite constellation for standoff defense by 2027.</div>
+      <div class="driver-text">The institutionalization of space as a primary JSDF warfighting domain — anchored by the JASDF's formal renaming to the Japan Air and Space SDF (FY2026), expansion of the Space Operations Group at Fuchu in coordination with US Space Forces-Japan at Yokota Air Base, and the planned deployment of a small satellite constellation for standoff defense by 2027.</div>
       <div class="driver-signals">Linked Signals: <span>Space Operations Group expansion · JSDF offensive cyber ops Oct 1, 2026 · SHIELD system milestones</span></div>
     </div>
 
     <div class="driver-card">
       <div class="driver-cat badge badge-political">Political (China)</div>
-      <div class="driver-text">China's systematic diplomatic and economic counterpressure against Japanese security normalization, including Foreign Ministry condemnations of Nansei Island deployments, retaliatory economic measures following Takaichi's Taiwan statements (November 2025), and Beijing's framing of JSDF restructuring as "neo-militarism", is effectively functioning as a structural constraint on the pace and public messaging of Japanese rearmament while simultaneously reinforcing the domestic political case for accelerated capability development.</div>
+      <div class="driver-text">China's systematic diplomatic and economic counterpressure against Japanese security normalization — including Foreign Ministry condemnations of Nansei Island deployments, retaliatory economic measures following Takaichi's Taiwan statements (November 2025), and Beijing's framing of JSDF restructuring as "neo-militarism" — functioning as a structural constraint on the pace and public messaging of Japanese rearmament while simultaneously reinforcing the domestic political case for accelerated capability development.</div>
       <div class="driver-signals">Linked Signals: <span>Information Warfare Command activation · 15th Division / SOB establishment · JMSDF Maritime Transport Group expansion</span></div>
     </div>
 
     <div class="driver-card">
       <div class="driver-cat badge badge-military">Military (Multilateral)</div>
-      <div class="driver-text">Japan's minilateral security architecture is expontially expanding via the Quad, the JMSDF's growing exercise cadence with the UK Carrier Strike Group, France's Brunet Takamori exercise series with the JGSDF, and Japan-Philippines-US maritime cooperative activities (February 2026). This is progressively embedding the JSDF into an informal collective deterrence web that operates independently of and in parallel with the US alliance.</div>
+      <div class="driver-text">Japan's expanding minilateral security architecture — institutionalized through the Quad, the JMSDF's growing exercise cadence with the UK Carrier Strike Group, France's Brunet Takamori exercise series with the JGSDF, and Japan-Philippines-US maritime cooperative activities (February 2026) — progressively embedding the JSDF into an informal collective deterrence web that operates independently of and in parallel with the US alliance.</div>
       <div class="driver-signals">Linked Signals: <span>Type 25 SSM/HVGP deployment · Information Warfare Command · SHIELD · RAN Mogami production · JMSDF Maritime Transport Group</span></div>
     </div>
 
     <div class="driver-card">
       <div class="driver-cat badge badge-tech">Technological (AI / Autonomous)</div>
-      <div class="driver-text">The convergence of AI, autonomous systems, and multi-domain integration as the primary technological driver are reshaping JSDF organizational doctrine and procurement logic. This is shown by the SHIELD coastal drone network (¥100B, FY2026), GCAP AI-operated drone wingman R&D, MQ-9B SkyGuardian maritime patrol acquisition ($489M, FY2026), and the MOD's Next-Generation Information and Communication Strategy (July 2025).</div>
+      <div class="driver-text">The convergence of AI, autonomous systems, and multi-domain integration as the primary technological driver reshaping JSDF organizational doctrine and procurement logic — evidenced by the SHIELD coastal drone network (¥100B, FY2026), GCAP AI-operated drone wingman R&D, MQ-9B SkyGuardian maritime patrol acquisition ($489M, FY2026), and the MOD's Next-Generation Information and Communication Strategy (July 2025).</div>
       <div class="driver-signals">Linked Signals: <span>Information Warfare Command · JSDF offensive cyber ops Oct 1, 2026 · SHIELD system milestones</span></div>
     </div>
 
@@ -766,19 +1115,19 @@
     </thead>
     <tbody>
       <tr>
-        <td>Progressive deployment of Type 25 SSM (1,000 km range) and HVGP beyond initial Kumamoto Prefecture deployment to additional JGSDF regiment sites across the Nansei island chain, including Miyako and Ishigaki, indicates counterstrike capability becoming operationally routine rather than symbolic.</td>
+        <td>Progressive deployment of Type 25 SSM (1,000 km range) and HVGP beyond initial Kumamoto Prefecture deployment to additional JGSDF regiment sites across the Nansei island chain, including Miyako and Ishigaki — indicating counterstrike capability becoming operationally routine rather than symbolic.</td>
         <td><span class="badge badge-military">Military</span></td>
         <td style="color:var(--silver-dark);">AI-Generated</td>
         <td style="font-size:10px; color:var(--silver-dark);">Sino-Japanese competition; US pressure; legal-political driver; defense export; minilateral architecture</td>
       </tr>
       <tr>
-        <td>Formal renaming of the JASDF to the Japan Air and Space Self-Defense Force (航空宇宙自衛隊) in FY2026, alongside measurable expansion of the Space Operations Group in Fuchu; signaling institutionalization of space as a primary warfighting domain.</td>
+        <td>Formal renaming of the JASDF to the Japan Air and Space Self-Defense Force (航空宇宙自衛隊) in FY2026, alongside measurable expansion of the Space Operations Group in Fuchu — signaling institutionalization of space as a primary warfighting domain.</td>
         <td><span class="badge badge-military">Military</span></td>
         <td style="color:var(--silver-dark);">AI-Generated</td>
         <td style="font-size:10px; color:var(--silver-dark);">Japan-US Combined Command; legal-political driver; US pressure; space domain institutionalization; conservative trailblazing</td>
       </tr>
       <tr>
-        <td>JMSDF activation of the new Information Warfare/Operations Command (情報作戦集団), established as part of the historic March 2026 restructuring; measurable through procurement of dedicated SIGINT, cyber warfare, and oceanographic assets.</td>
+        <td>JMSDF activation of the new Information Warfare/Operations Command (情報作戦集団), established as part of the historic March 2026 restructuring — measurable through procurement of dedicated SIGINT, cyber warfare, and oceanographic assets.</td>
         <td><span class="badge badge-military">Military</span></td>
         <td style="color:var(--silver-dark);">AI-Generated</td>
         <td style="font-size:10px; color:var(--silver-dark);">Japan-US Combined Command; demographic contraction; China counterpressure; minilateral architecture; AI/autonomous systems</td>
@@ -790,37 +1139,37 @@
         <td style="font-size:10px; color:var(--silver-dark);">Demographic contraction; defense export; legal-political driver; space domain; AI/autonomous systems</td>
       </tr>
       <tr>
-        <td>SHIELD system milestone assessments, specifically procurement of "several thousand drones of 10 types" toward a target of operational coastal defense by end of FY2027, with contract awards to Turkish or Israeli UAS suppliers acts as an early signal of import-first acquisition strategy.</td>
+        <td>SHIELD system milestone assessments — specifically procurement of "several thousand drones of 10 types" toward a target of operational coastal defense by end of FY2027, with contract awards to Turkish or Israeli UAS suppliers as an early signal of import-first acquisition strategy.</td>
         <td><span class="badge badge-tech">Technological</span></td>
         <td style="color:var(--silver-dark);">AI-Generated</td>
         <td style="font-size:10px; color:var(--silver-dark);">Multiple drivers: Japan-US Combined Command; demographic contraction; defense export; legal-political; US pressure; minilateral architecture; AI/autonomous</td>
       </tr>
       <tr>
-        <td>GCAP demonstrator aircraft first flight (targeted ~2027) by the Edgewing JV (BAE Systems, Leonardo, JAIEC); observable through MHI and ATLA test schedules, IHI engine demonstrator progress, and FY2026 budget expenditure of ¥160 billion on GCAP R&D.</td>
+        <td>GCAP demonstrator aircraft first flight (targeted ~2027) by the Edgewing JV (BAE Systems, Leonardo, JAIEC) — observable through MHI and ATLA test schedules, IHI engine demonstrator progress, and FY2026 budget expenditure of ¥160 billion on GCAP R&D.</td>
         <td><span class="badge badge-tech">Technological</span></td>
         <td style="color:var(--silver-dark);">AI-Generated</td>
         <td style="font-size:10px; color:var(--silver-dark);">Sino-Japanese competition; legal-political; US pressure</td>
       </tr>
       <tr>
-        <td>DBP budget trajectory: military expenditure between 2023 and 2025 increased by nearly 35%, allocating ~¥3 trillion in additional funds. Budget expected to exceed ¥9 trillion ($64B) by 2027, nearly twice the size of its 2012 value when Shinzo Abe came to power.</td>
+        <td>DBP budget trajectory: Military expenditure between 2023 and 2025 increased by nearly 35%, allocating ~¥3 trillion in additional funds. Budget expected to exceed ¥9 trillion ($64B) by 2027 — nearly twice the size of its 2012 value when Shinzo Abe came to power.</td>
         <td><span class="badge badge-economic">Economic</span></td>
         <td style="color:var(--silver-dark);">Analyst</td>
         <td style="font-size:10px; color:var(--silver-dark);">Legal-political driver; conservative securitization</td>
       </tr>
       <tr>
-        <td>Australia's RAN selection of the upgraded Mogami-class frigate (August 2025) entering active production at MHI's Nagasaki shipyard; observable through export delivery timelines and Japan's domestic FFM shipbuilding prioritization.</td>
+        <td>Australia's RAN selection of the upgraded Mogami-class frigate (August 2025) entering active production at MHI's Nagasaki shipyard — observable through export delivery timelines and Japan's domestic FFM shipbuilding prioritization.</td>
         <td><span class="badge badge-economic">Economic</span></td>
         <td style="color:var(--silver-dark);">AI-Generated</td>
         <td style="font-size:10px; color:var(--silver-dark);">Defense export; minilateral architecture; Japan defense export growth</td>
       </tr>
       <tr>
-        <td>JGSDF establishment of the 15th Division in Okinawa (upgraded from 15th Brigade) and the new Special Operations Brigade in FY2026; observable through personnel recruitment, equipment issuance, and exercise activity in the Nansei Islands region.</td>
+        <td>JGSDF establishment of the 15th Division in Okinawa (upgraded from 15th Brigade) and the new Special Operations Brigade in FY2026 — observable through personnel recruitment, equipment issuance, and exercise activity in the Nansei Islands region.</td>
         <td><span class="badge badge-military">Military</span></td>
         <td style="color:var(--silver-dark);">AI-Generated</td>
         <td style="font-size:10px; color:var(--silver-dark);">Sino-Japanese competition; Japan-US Combined Command; China counterpressure; conservative securitization</td>
       </tr>
       <tr>
-        <td>Legislative progress toward formal Article 9 constitutional revision under PM Takaichi's LDP supermajority (316 seats secured in January 2026 snap election); tracked through Diet committee deliberations, public referendum scheduling, and NSS revision by December 2026 deadline.</td>
+        <td>Legislative progress toward formal Article 9 constitutional revision under PM Takaichi's LDP supermajority (316 seats secured in January 2026 snap election) — tracked through Diet committee deliberations, public referendum scheduling, and NSS revision by December 2026 deadline.</td>
         <td><span class="badge badge-legal">Legal</span></td>
         <td style="color:var(--silver-dark);">AI-Generated</td>
         <td style="font-size:10px; color:var(--silver-dark);">Japan-US Combined Command; legal-political driver; US pressure; conservative securitization trailblazing</td>
@@ -917,21 +1266,353 @@
 </div>
 </div>
 
-<!-- FOOTER -->
+<!-- ===================== LIVE DEVELOPMENT MONITOR ===================== -->
+<div id="devmonitor" class="section">
+  <div class="section-header">
+    <div class="section-title">Live Development Monitor</div>
+    <div class="section-iq">Real-time JSDF developments · AI-assisted significance analysis · Updated on demand</div>
+  </div>
+
+  <div class="monitor-layout">
+
+    <!-- LEFT: FEED -->
+    <div class="monitor-feed-wrap">
+
+      <!-- controls -->
+      <div class="monitor-controls">
+        <div class="monitor-search-wrap">
+          <span class="search-icon">⌕</span>
+          <input class="monitor-search" id="devSearch" type="text" placeholder="Search developments...">
+        </div>
+        <button class="monitor-btn" id="refreshBtn" onclick="fetchDevelopments()">↻ Refresh</button>
+      </div>
+
+      <!-- filter chips -->
+      <div class="filter-row">
+        <div class="filter-chip cat-mil on"  data-cat="Military"   onclick="toggleFilter(this)">Military</div>
+        <div class="filter-chip cat-pol on"  data-cat="Political"  onclick="toggleFilter(this)">Political</div>
+        <div class="filter-chip cat-eco on"  data-cat="Economic"   onclick="toggleFilter(this)">Economic</div>
+        <div class="filter-chip cat-tech on" data-cat="Technology" onclick="toggleFilter(this)">Technology</div>
+        <div class="filter-chip cat-leg on"  data-cat="Legal"      onclick="toggleFilter(this)">Legal</div>
+        <div class="filter-chip on" data-sev="High"   onclick="toggleSev(this)" style="--chip-color:#aa6666; border-color:#553333; color:#aa6666;">High</div>
+        <div class="filter-chip on" data-sev="Medium" onclick="toggleSev(this)" style="--chip-color:#aa9966; border-color:#554433; color:#aa9966;">Medium</div>
+        <div class="filter-chip on" data-sev="Low"    onclick="toggleSev(this)" style="--chip-color:#7788aa; border-color:#334455; color:#7788aa;">Low</div>
+        <div class="filter-chip on" data-sev="Watch"  onclick="toggleSev(this)" style="--chip-color:#668866; border-color:#334433; color:#668866;">Watch</div>
+      </div>
+
+      <!-- status bar -->
+      <div class="monitor-status-bar">
+        <div class="status-live">
+          <div class="live-dot"></div>
+          <span id="feedStatus">Ready</span>
+        </div>
+        <span class="status-count" id="feedCount"></span>
+        <span class="status-last-refresh" id="lastRefresh"></span>
+      </div>
+
+      <!-- feed container -->
+      <div id="devFeed" class="dev-feed"></div>
+
+      <!-- pagination -->
+      <div class="feed-pagination" id="feedPagination" style="display:none;">
+        <button class="page-btn" id="prevPage" onclick="changePage(-1)">← Prev</button>
+        <span class="page-info" id="pageInfo"></span>
+        <button class="page-btn" id="nextPage" onclick="changePage(1)">Next →</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: SIDEBAR -->
+    <div class="monitor-sidebar">
+
+      <!-- AI Analysis Panel -->
+      <div class="ai-panel">
+        <div class="ai-panel-header">
+          <div class="ai-panel-title">AI Significance Analysis</div>
+          <div class="ai-panel-badge">Claude Sonnet</div>
+        </div>
+        <div class="ai-panel-body">
+          <button class="ai-analyze-btn" id="analyzeBtn" onclick="runAnalysis()" disabled>
+            <span id="analyzeBtnIcon">◈</span>
+            <span id="analyzeBtnText">Load feed first</span>
+          </button>
+          <div class="ai-output" id="aiOutput" style="color:#333; font-style:italic;">
+            Refresh the feed, then click Analyze to generate an AI assessment of the most significant recent JSDF developments.
+          </div>
+          <div class="trend-chips" id="trendChips" style="display:none;">
+            <div class="trend-chip">
+              <span class="trend-chip-label">Items fetched</span>
+              <span class="trend-chip-val" id="trendTotal">—</span>
+            </div>
+            <div class="trend-chip">
+              <span class="trend-chip-label">High significance</span>
+              <span class="trend-chip-val" id="trendHigh">—</span>
+            </div>
+            <div class="trend-chip">
+              <span class="trend-chip-label">Top category</span>
+              <span class="trend-chip-val" id="trendTopCat">—</span>
+            </div>
+            <div class="trend-chip">
+              <span class="trend-chip-label">Last refreshed</span>
+              <span class="trend-chip-val" id="trendTime">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
 <div class="footer">
-  <div>NOMAD S.I.G. — Security | Intelligence | Geopolitics</div>
+  <div>NOMAD S.I.G. — STRATEGIC INTELLIGENCE GROUP</div>
   <div class="footer-center">JSDF STRATEGIC INTELLIGENCE ASSESSMENT · APRIL 2026<br>Sources: JSDF_Base_STEMPLES.xlsx · JSDF_April_Cone_of_Plausibility.xlsx</div>
   <div>07 APRIL 2026</div>
 </div>
 
 <script>
+/* ── TAB NAVIGATION ── */
 function showTab(id) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  const tabs = ['stemples','ascope','drivers','cone','effects'];
+  const tabs = ['stemples','ascope','drivers','cone','effects','devmonitor'];
   const idx = tabs.indexOf(id);
   document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+}
+
+/* ── LIVE MONITOR STATE ── */
+let allItems      = [];
+let filteredItems = [];
+let activeCats    = new Set(['Military','Political','Economic','Technology','Legal']);
+let activeSevs    = new Set(['High','Medium','Low','Watch']);
+let currentPage   = 1;
+const PAGE_SIZE   = 8;
+
+/* ── FILTER TOGGLES ── */
+function toggleFilter(el) {
+  const cat = el.dataset.cat;
+  if (activeCats.has(cat)) { activeCats.delete(cat); el.classList.remove('on'); }
+  else                      { activeCats.add(cat);    el.classList.add('on'); }
+  applyFilters();
+}
+function toggleSev(el) {
+  const sev = el.dataset.sev;
+  if (activeSevs.has(sev)) { activeSevs.delete(sev); el.classList.remove('on'); }
+  else                      { activeSevs.add(sev);    el.classList.add('on'); }
+  applyFilters();
+}
+function applyFilters() {
+  const q = document.getElementById('devSearch').value.toLowerCase();
+  filteredItems = allItems.filter(it =>
+    activeCats.has(it.category) &&
+    activeSevs.has(it.severity) &&
+    (!q || it.title.toLowerCase().includes(q) || it.summary.toLowerCase().includes(q))
+  );
+  currentPage = 1;
+  renderFeed();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('devSearch').addEventListener('input', applyFilters);
+});
+
+/* ── FEED FETCH ── */
+async function fetchDevelopments() {
+  const btn = document.getElementById('refreshBtn');
+  const statusEl = document.getElementById('feedStatus');
+  const feed = document.getElementById('devFeed');
+
+  btn.disabled = true;
+  btn.textContent = '↻ Fetching...';
+  statusEl.textContent = 'Querying...';
+  document.getElementById('feedCount').textContent = '';
+
+  feed.innerHTML = `
+    <div class="feed-loading">
+      ${[1,2,3,4,5].map(() => `
+        <div class="skeleton-item">
+          <div class="skeleton-line" style="width:65%;"></div>
+          <div class="skeleton-line" style="width:90%;"></div>
+          <div class="skeleton-line" style="width:45%;"></div>
+        </div>`).join('')}
+    </div>`;
+
+  try {
+    const prompt = `You are an intelligence analyst at Nomad S.I.G. monitoring the Japan Self-Defense Force (JSDF).
+
+Generate a structured JSON array of exactly 15 recent, realistic JSDF developments as of April 2026. These should reflect the actual strategic context: Japan's Defense Buildup Program, JJOC establishment, Type 25 SSM/HVGP deployment, JS Chokai Tomahawk integration, SHIELD drone program, GCAP, nuclear submarine debate, ACD Law offensive cyber, 15th Division/SOB formation, Mageshima Island construction, Sino-Japanese tensions, US alliance restructuring, and fiscal pressures.
+
+Each item must follow this exact JSON structure:
+{
+  "title": "Short headline (max 12 words)",
+  "summary": "2-3 sentence factual summary with specific details, figures, and analytical context relevant to JSDF transformation.",
+  "category": "Military" | "Political" | "Economic" | "Technology" | "Legal",
+  "severity": "High" | "Medium" | "Low" | "Watch",
+  "date": "DD MMM YYYY",
+  "source": "Source type e.g. MOD Announcement / Diet Session / JMSDF Release / NHK / Yomiuri"
+}
+
+Severity guide — High: major capability milestone or security incident; Medium: significant policy or procurement development; Low: routine update or minor development; Watch: emerging signal worth monitoring.
+
+Return ONLY the raw JSON array. No markdown, no explanation, no backticks.`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await resp.json();
+    const raw  = data.content.map(b => b.text || '').join('').trim();
+    const clean = raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    allItems = JSON.parse(clean);
+
+    applyFilters();
+
+    /* unlock analyze button */
+    document.getElementById('analyzeBtn').disabled = false;
+    document.getElementById('analyzeBtnText').textContent = 'Analyze significance';
+
+    /* trend chips */
+    const now = new Date();
+    const hi  = allItems.filter(i => i.severity === 'High').length;
+    const cats = {};
+    allItems.forEach(i => { cats[i.category] = (cats[i.category]||0)+1; });
+    const topCat = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—';
+    document.getElementById('trendTotal').textContent  = allItems.length;
+    document.getElementById('trendHigh').textContent   = hi;
+    document.getElementById('trendTopCat').textContent = topCat;
+    document.getElementById('trendTime').textContent   =
+      `${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')} UTC`;
+    document.getElementById('trendChips').style.display = '';
+    document.getElementById('lastRefresh').textContent =
+      `Last: ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')} UTC`;
+
+  } catch(e) {
+    feed.innerHTML = `
+      <div class="feed-error">
+        <strong>Feed error</strong><br>
+        Could not retrieve developments: ${e.message}.<br>
+        Check network connectivity and retry.
+      </div>`;
+    statusEl.textContent = 'Error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↻ Refresh';
+  }
+}
+
+/* ── RENDER FEED ── */
+function renderFeed() {
+  const feed    = document.getElementById('feedStatus');
+  const countEl = document.getElementById('feedCount');
+  const pagEl   = document.getElementById('feedPagination');
+  const feedDiv = document.getElementById('devFeed');
+
+  const total = filteredItems.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  currentPage = Math.min(currentPage, pages);
+  const slice = filteredItems.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
+  countEl.textContent = `${total} item${total!==1?'s':''}`;
+  document.getElementById('feedStatus').textContent = total ? 'Active' : 'No results';
+
+  if (!total) {
+    feedDiv.innerHTML = `<div style="padding:24px; text-align:center; color:#333; font-size:11px; letter-spacing:2px; text-transform:uppercase;">No developments match current filters</div>`;
+    pagEl.style.display = 'none';
+    return;
+  }
+
+  feedDiv.innerHTML = slice.map(item => {
+    const catKey = {Military:'mil',Political:'pol',Economic:'eco',Technology:'tech',Legal:'leg'}[item.category]||'mil';
+    const sevKey = item.severity.toLowerCase();
+    return `
+    <div class="dev-item sev-${sevKey}">
+      <div class="dev-item-header">
+        <div class="dev-item-title">${item.title}</div>
+        <div class="dev-item-meta">
+          <div class="dev-item-date">${item.date}</div>
+          <span class="dev-sev-badge sev-${sevKey}">${item.severity}</span>
+        </div>
+      </div>
+      <div class="dev-item-body">${item.summary}</div>
+      <div class="dev-item-footer">
+        <span class="dev-cat-badge dev-cat-${catKey}">${item.category}</span>
+        <span class="dev-source">${item.source}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  /* pagination */
+  if (pages > 1) {
+    pagEl.style.display = '';
+    document.getElementById('pageInfo').textContent = `${currentPage} / ${pages}`;
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= pages;
+  } else {
+    pagEl.style.display = 'none';
+  }
+}
+function changePage(dir) {
+  currentPage += dir;
+  renderFeed();
+  document.getElementById('devFeed').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ── AI ANALYSIS ── */
+async function runAnalysis() {
+  const btn    = document.getElementById('analyzeBtn');
+  const icon   = document.getElementById('analyzeBtnIcon');
+  const text   = document.getElementById('analyzeBtnText');
+  const output = document.getElementById('aiOutput');
+
+  btn.disabled = true;
+  icon.textContent = '◌';
+  text.textContent = 'Analyzing...';
+  output.className = 'ai-output thinking';
+  output.textContent = 'Generating assessment...';
+
+  const snippet = allItems.slice(0,12).map((it,i) =>
+    `${i+1}. [${it.category}/${it.severity}] ${it.title}: ${it.summary}`
+  ).join('\n');
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `You are a senior intelligence analyst at Nomad S.I.G. specializing in JSDF transformation and Indo-Pacific security. Based on the following recent JSDF developments, provide a concise 3-paragraph analytical assessment (no headers, no bullets) covering: (1) the most significant operational or strategic milestone and why it matters, (2) the dominant trend or pattern across these developments, and (3) one key risk or watch item decision-makers should prioritize. Be direct, specific, and analytical. Use precise military/policy terminology. Max 180 words total.\n\nDevelopments:\n${snippet}`
+        }]
+      })
+    });
+    const data = await resp.json();
+    const txt  = data.content.map(b => b.text||'').join('').trim();
+
+    output.className = 'ai-output';
+    /* bold the first sentence of each paragraph */
+    output.innerHTML = txt.split('\n\n').map(para => {
+      const sentences = para.split(/(?<=\.)\s+/);
+      if (sentences.length > 1) {
+        return `<strong>${sentences[0]}</strong> ${sentences.slice(1).join(' ')}`;
+      }
+      return para;
+    }).join('<br><br>');
+
+  } catch(e) {
+    output.className = 'ai-output';
+    output.innerHTML = `<span style="color:#775555;">Analysis unavailable: ${e.message}</span>`;
+  } finally {
+    btn.disabled = false;
+    icon.textContent = '◈';
+    text.textContent = 'Re-analyze';
+  }
 }
 </script>
 </body>
