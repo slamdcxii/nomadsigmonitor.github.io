@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Counterspace Weapons Monitor — NOMAD S.I.G.</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --black:        #000000;
+    --dark:         #0a0a0a;
+    --dark2:        #111111;
+    --dark3:        #1a1a1a;
+    --border:       #2a2a2a;
+    --silver-dark:  #888888;
+    --silver:       #b0b0b0;
+    --silver-light: #cccccc;
+    --silver-bright:#e0e0e0;
+    --white:        #f0f0f0;
+    --accent:       #c0c0c0;
+    --red:          #cc3333;
+    --orange:       #cc7733;
+    --green:        #336633;
+    --blue:         #334466;
+    --glow:         rgba(180,180,180,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--silver-light);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    background: linear-gradient(135deg, #000 0%, #111 50%, #0a0a0a 100%);
+    border-bottom: 1px solid #333;
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(150,150,150,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .header-logo { width: 72px; height: 72px; flex-shrink: 0; }
+  .header-text { flex: 1; }
+  .header-firm {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+    margin-bottom: 6px;
+  }
+  .header-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--silver-bright);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .header-subtitle {
+    font-size: 12px;
+    color: var(--silver-dark);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .header-meta {
+    text-align: right;
+    font-size: 11px;
+    color: var(--silver-dark);
+    letter-spacing: 1px;
+  }
+  .header-meta .date { color: var(--silver); font-size: 13px; margin-bottom: 4px; }
+  .header-meta .classif {
+    display: inline-block;
+    border: 1px solid #555;
+    padding: 3px 10px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--silver);
+    margin-top: 6px;
+  }
+
+  /* ─── NAV TABS ─── */
+  .nav {
+    background: var(--dark2);
+    border-bottom: 1px solid #222;
+    display: flex;
+    padding: 0 40px;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .nav-tab {
+    padding: 14px 22px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .nav-tab:hover { color: var(--silver-light); }
+  .nav-tab.active {
+    color: var(--silver-bright);
+    border-bottom-color: var(--silver);
+  }
+
+  /* ─── CONTENT ─── */
+  .content {
+    padding: 32px 40px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ─── SECTION HEADERS ─── */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #222;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--silver-bright);
+  }
+  .section-iq {
+    font-size: 12px;
+    color: var(--silver-dark);
+    font-style: italic;
+    letter-spacing: 1px;
+  }
+
+  /* ─── SHARED CARD ─── */
+  .card {
+    background: var(--dark2);
+    border: 1px solid #222;
+    padding: 18px 22px;
+    margin-bottom: 3px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: #383838; }
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+    margin-bottom: 8px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--silver-bright);
+    margin-bottom: 8px;
+  }
+  .card-body {
+    font-size: 12px;
+    color: var(--silver);
+    line-height: 1.7;
+  }
+
+  /* ─── SUBSECTION DIVIDER ─── */
+  .sub-divider {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+    margin-bottom: 14px;
+    margin-top: 28px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .sub-divider:first-of-type { margin-top: 0; }
+
+  /* ─── TWO-COLUMN GRID ─── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    margin-bottom: 3px;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 3px;
+    margin-bottom: 3px;
+  }
+
+  /* ─── ACTOR TABLE (placeholder) ─── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+  .data-table th {
+    background: #0d0d0d;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+    border: 1px solid #1a1a1a;
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 11px 14px;
+    border: 1px solid #1a1a1a;
+    background: var(--dark2);
+    color: var(--silver);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  .data-table tr:hover td { background: #151515; }
+  .data-table .row-label {
+    color: var(--silver-light);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: #0d0d0d;
+    white-space: nowrap;
+  }
+
+  /* ─── BADGE / TAG ─── */
+  .tag {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border: 1px solid #2a2a2a;
+    color: var(--silver-dark);
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .tag-kinetic   { color: #aa7777; border-color: #553333; }
+  .tag-directed  { color: #aa9966; border-color: #554422; }
+  .tag-electronic{ color: #8899aa; border-color: #334455; }
+  .tag-cyber     { color: #887799; border-color: #443355; }
+  .tag-orbital   { color: #778877; border-color: #334433; }
+
+  /* severity indicators */
+  .sev-high   { color: #aa6666; }
+  .sev-medium { color: #aa9955; }
+  .sev-low    { color: #6688aa; }
+
+  /* ─── CHART WRAPPER ─── */
+  .chart-wrap {
+    background: var(--dark2);
+    border: 1px solid #1a1a1a;
+    padding: 20px;
+    margin-bottom: 3px;
+  }
+  .chart-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--silver-dark);
+    margin-bottom: 16px;
+  }
+
+  /* ─── EMPTY STATE (placeholder cells) ─── */
+  .placeholder-cell {
+    background: #070707;
+    border: 1px dashed #1a1a1a;
+    padding: 28px 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 120px;
+    margin-bottom: 3px;
+  }
+  .placeholder-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #252525;
+  }
+  .placeholder-sub {
+    font-size: 10px;
+    color: #1e1e1e;
+    font-style: italic;
+  }
+
+  /* ─── TIMELINE ─── */
+  .timeline { display: flex; flex-direction: column; gap: 2px; }
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 90px 1px 1fr;
+    gap: 0 16px;
+    align-items: start;
+  }
+  .timeline-date {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--silver-dark);
+    font-family: 'Courier New', monospace;
+    text-align: right;
+    padding-top: 14px;
+  }
+  .timeline-line-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 18px;
+  }
+  .timeline-dot {
+    width: 7px; height: 7px;
+    border: 1px solid #444;
+    background: #1a1a1a;
+    flex-shrink: 0;
+  }
+  .timeline-connector {
+    width: 1px;
+    flex: 1;
+    background: #1a1a1a;
+    min-height: 20px;
+    margin-top: 4px;
+  }
+  .timeline-content {
+    background: var(--dark2);
+    border: 1px solid #1a1a1a;
+    padding: 12px 16px;
+    margin-bottom: 2px;
+  }
+  .timeline-content-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--silver-light);
+    margin-bottom: 5px;
+  }
+  .timeline-content-body {
+    font-size: 11px;
+    color: var(--silver-dark);
+    line-height: 1.6;
+  }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    background: #050505;
+    border-top: 1px solid #1a1a1a;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 1px;
+    margin-top: 60px;
+  }
+  .footer-center { text-align: center; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #111; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1100px) {
+    .two-col   { grid-template-columns: 1fr; }
+    .three-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    .content { padding: 20px 16px; }
+    .header  { padding: 20px 16px; }
+    .nav     { padding: 0 16px; }
+    .footer  { padding: 16px; flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<div class="header">
+  <div class="header-logo">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="globeGrad" cx="45%" cy="40%">
+          <stop offset="0%" stop-color="#999"/>
+          <stop offset="60%" stop-color="#555"/>
+          <stop offset="100%" stop-color="#222"/>
+        </radialGradient>
+        <radialGradient id="rimGrad" cx="50%" cy="50%">
+          <stop offset="0%" stop-color="#888"/>
+          <stop offset="100%" stop-color="#333"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="50" cy="60" rx="42" ry="22" fill="url(#rimGrad)" opacity="0.7"/>
+      <ellipse cx="50" cy="57" rx="40" ry="20" fill="url(#globeGrad)"/>
+      <ellipse cx="50" cy="57" rx="40" ry="20" fill="none" stroke="#777" stroke-width="0.5" opacity="0.5"/>
+      <ellipse cx="50" cy="57" rx="28" ry="14" fill="none" stroke="#777" stroke-width="0.5" opacity="0.4"/>
+      <ellipse cx="50" cy="57" rx="15" ry="7.5" fill="none" stroke="#777" stroke-width="0.5" opacity="0.4"/>
+      <line x1="10" y1="57" x2="90" y2="57" stroke="#777" stroke-width="0.5" opacity="0.4"/>
+      <line x1="50" y1="37" x2="50" y2="77" stroke="#777" stroke-width="0.5" opacity="0.4"/>
+      <line x1="22" y1="42" x2="78" y2="72" stroke="#777" stroke-width="0.4" opacity="0.3"/>
+      <line x1="78" y1="42" x2="22" y2="72" stroke="#777" stroke-width="0.4" opacity="0.3"/>
+      <polygon points="50,10 44,58 50,54 56,58" fill="#c0c0c0"/>
+      <polygon points="50,94 44,58 50,62 56,58" fill="#555"/>
+      <circle cx="50" cy="12" r="2" fill="#e0e0e0" opacity="0.8"/>
+    </svg>
+  </div>
+
+  <div class="header-text">
+    <div class="header-firm">Nomad S.I.G. — Strategic Intelligence Group</div>
+    <div class="header-title">Counterspace Weapons</div>
+    <div class="header-subtitle">Global Counterspace Capability Monitor · MON-02</div>
+  </div>
+
+  <div class="header-meta">
+    <div class="date" id="headerDate">— — ————</div>
+    <div>Intelligence Question:</div>
+    <div style="color:var(--silver); font-size:12px; max-width:260px; margin-top:4px; font-style:italic;">
+      How are major space powers developing and deploying counterspace capabilities, and what are the implications for space domain stability?
+    </div>
+    <div class="classif">Analytical Product</div>
+  </div>
+</div>
+
+<!-- ─── NAV TABS ─── -->
+<div class="nav">
+  <div class="nav-tab active" onclick="showTab('overview')">Overview</div>
+  <div class="nav-tab" onclick="showTab('actors')">Actor Profiles</div>
+  <div class="nav-tab" onclick="showTab('weapons')">Weapon Systems</div>
+  <div class="nav-tab" onclick="showTab('incidents')">Incidents & Tests</div>
+  <div class="nav-tab" onclick="showTab('assessment')">Assessment</div>
+</div>
+
+<!-- ─── CONTENT ─── -->
+<div class="content">
+
+<!-- ════════════════════════════════════════ -->
+<!-- TAB 1: OVERVIEW                          -->
+<!-- ════════════════════════════════════════ -->
+<div id="overview" class="section active">
+  <div class="section-header">
+    <div class="section-title">Monitor Overview</div>
+    <div class="section-iq">Scope · Key actors · Capability categories · Watch indicators</div>
+  </div>
+
+  <!-- IQ block -->
+  <div class="sub-divider">Intelligence Question</div>
+  <div class="card">
+    <div class="card-label">Central Intelligence Question</div>
+    <div class="card-title" style="font-size:15px;">
+      How are major space powers developing and deploying counterspace capabilities, and what are the implications for space domain stability?
+    </div>
+    <div class="card-body" style="margin-top:12px;">
+      <!-- IMPORT: 2–3 sentence framing of the analytical problem. Key tensions, time horizon, decision-maker audience. -->
+      <span style="color:#333; font-style:italic;">[Analytical framing to be imported]</span>
+    </div>
+  </div>
+
+  <!-- Scope summary row -->
+  <div class="sub-divider">Monitor Scope</div>
+  <div class="three-col">
+    <div class="card">
+      <div class="card-label">Actors Tracked</div>
+      <div class="card-title" style="font-size:22px; letter-spacing:2px;">—</div>
+      <!-- IMPORT: Number of state actors under active monitoring -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Actor count]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Weapon Categories</div>
+      <div class="card-title" style="font-size:22px; letter-spacing:2px;">5</div>
+      <div class="card-body">
+        <span class="tag tag-kinetic">Kinetic</span>
+        <span class="tag tag-directed">Directed Energy</span>
+        <span class="tag tag-electronic">Electronic</span>
+        <span class="tag tag-cyber">Cyber</span>
+        <span class="tag tag-orbital">Orbital</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Assessment Date</div>
+      <div class="card-title" style="font-size:22px; letter-spacing:2px;" id="scopeDate">— — ——</div>
+      <!-- IMPORT: Publication / assessment cycle date -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Cycle date]</span></div>
+    </div>
+  </div>
+
+  <!-- Key actors at a glance -->
+  <div class="sub-divider">Key Actors at a Glance</div>
+  <div class="data-table" style="width:100%; border-collapse:collapse;">
+    <table class="data-table" style="width:100%;">
+      <thead>
+        <tr>
+          <th>Actor</th>
+          <th>Kinetic ASAT</th>
+          <th>Directed Energy</th>
+          <th>Electronic Warfare</th>
+          <th>Cyber</th>
+          <th>Co-orbital / RPO</th>
+          <th>Overall Maturity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- IMPORT: One row per state actor. Replace placeholder dashes with capability ratings or short descriptors. -->
+        <tr>
+          <td class="row-label">United States</td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+        </tr>
+        <tr>
+          <td class="row-label">China (PRC)</td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+        </tr>
+        <tr>
+          <td class="row-label">Russia</td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+        </tr>
+        <tr>
+          <td class="row-label">India</td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+        </tr>
+        <tr>
+          <td class="row-label">North Korea</td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+          <td><span style="color:#333;">—</span></td>
+        </tr>
+        <!-- IMPORT: Add additional rows as needed -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Watch indicators -->
+  <div class="sub-divider">Key Watch Indicators</div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Signals to Monitor</div>
+      <!-- IMPORT: Bulleted list of observable indicators analysts should track -->
+      <div class="card-body">
+        <div style="display:flex; flex-direction:column; gap:8px; color:#333; font-style:italic;">
+          <div>[Watch indicator 1 — e.g. DA-ASAT test notifications]</div>
+          <div>[Watch indicator 2 — e.g. RPO maneuver detections]</div>
+          <div>[Watch indicator 3 — e.g. GPS jamming incidents]</div>
+          <div>[Watch indicator 4 — e.g. directed energy program procurement]</div>
+          <div>[Watch indicator 5 — e.g. debris field generation events]</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Analytical Caveats</div>
+      <!-- IMPORT: Key limitations, classification gaps, source reliability notes -->
+      <div class="card-body">
+        <div style="color:#333; font-style:italic;">[Source limitations, classification caveats, and analytical confidence levels to be imported]</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /overview -->
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- TAB 2: ACTOR PROFILES                   -->
+<!-- ════════════════════════════════════════ -->
+<div id="actors" class="section">
+  <div class="section-header">
+    <div class="section-title">Actor Profiles</div>
+    <div class="section-iq">State-by-state counterspace capability and doctrine assessment</div>
+  </div>
+
+  <!-- Actor card template — repeat per actor -->
+  <div class="sub-divider">United States</div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Strategic Posture</div>
+      <!-- IMPORT: 2–3 sentence summary of US counterspace doctrine, organisational locus (Space Force, NRO, etc.), and declared policy -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[US strategic posture and doctrine to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Key Capabilities</div>
+      <!-- IMPORT: Bullet list of confirmed/assessed US counterspace programs -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Capability inventory to be imported]</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-label">Analytical Assessment</div>
+    <!-- IMPORT: Analyst judgment on trajectory, gaps, and significance -->
+    <div class="card-body"><span style="color:#333; font-style:italic;">[Assessment to be imported]</span></div>
+  </div>
+
+  <div class="sub-divider" style="margin-top:32px;">China (PRC)</div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Strategic Posture</div>
+      <div class="card-body"><span style="color:#333; font-style:italic;">[PRC strategic posture and doctrine to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Key Capabilities</div>
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Capability inventory to be imported]</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-label">Analytical Assessment</div>
+    <div class="card-body"><span style="color:#333; font-style:italic;">[Assessment to be imported]</span></div>
+  </div>
+
+  <div class="sub-divider" style="margin-top:32px;">Russia</div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Strategic Posture</div>
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Russian strategic posture and doctrine to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Key Capabilities</div>
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Capability inventory to be imported]</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-label">Analytical Assessment</div>
+    <div class="card-body"><span style="color:#333; font-style:italic;">[Assessment to be imported]</span></div>
+  </div>
+
+  <div class="sub-divider" style="margin-top:32px;">India</div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Strategic Posture</div>
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Indian strategic posture and doctrine to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Key Capabilities</div>
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Capability inventory to be imported]</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-label">Analytical Assessment</div>
+    <div class="card-body"><span style="color:#333; font-style:italic;">[Assessment to be imported]</span></div>
+  </div>
+
+  <!-- IMPORT: Add additional actor blocks following the same pattern -->
+
+</div><!-- /actors -->
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- TAB 3: WEAPON SYSTEMS                   -->
+<!-- ════════════════════════════════════════ -->
+<div id="weapons" class="section">
+  <div class="section-header">
+    <div class="section-title">Weapon Systems</div>
+    <div class="section-iq">Capability categories · Known programs · Technical parameters</div>
+  </div>
+
+  <!-- KINETIC -->
+  <div class="sub-divider">
+    <span class="tag tag-kinetic" style="margin-right:10px;">Kinetic</span>
+    Direct-Ascent & Co-orbital ASAT
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Category Overview</div>
+      <!-- IMPORT: Technical and doctrinal overview of DA-ASAT and co-orbital interceptors -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Kinetic category overview to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Known Programs</div>
+      <!-- IMPORT: Table or list of confirmed/assessed programs by actor -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Known programs: PL-19 Nudol, SC-19, Mission Shakti, etc. — to be imported]</span></div>
+    </div>
+  </div>
+  <div class="placeholder-cell">
+    <div class="placeholder-label">Chart — Kinetic ASAT Tests by Year & Actor</div>
+    <div class="placeholder-sub">Data to be imported · Chart.js bar chart</div>
+  </div>
+
+  <!-- DIRECTED ENERGY -->
+  <div class="sub-divider" style="margin-top:28px;">
+    <span class="tag tag-directed" style="margin-right:10px;">Directed Energy</span>
+    Lasers · High-Power Microwave · Particle Beams
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Category Overview</div>
+      <!-- IMPORT: Laser dazzling, blinding, damaging; HPM; reversible vs. permanent effects -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Directed energy overview to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Known Programs</div>
+      <!-- IMPORT: Tracked directed energy programs — Peresvet, Kalina, MIRACL, etc. -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Known programs to be imported]</span></div>
+    </div>
+  </div>
+
+  <!-- ELECTRONIC WARFARE -->
+  <div class="sub-divider" style="margin-top:28px;">
+    <span class="tag tag-electronic" style="margin-right:10px;">Electronic Warfare</span>
+    Jamming · Spoofing · Uplink Interference
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Category Overview</div>
+      <!-- IMPORT: GPS jamming, satellite uplink/downlink jamming, spoofing taxonomy -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Electronic warfare overview to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Known Programs</div>
+      <!-- IMPORT: Krasukha, Tirada-2S, Tobol, PRC EW systems, etc. -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Known programs to be imported]</span></div>
+    </div>
+  </div>
+
+  <!-- CYBER -->
+  <div class="sub-divider" style="margin-top:28px;">
+    <span class="tag tag-cyber" style="margin-right:10px;">Cyber</span>
+    Ground Segment Intrusion · Satellite Uplink Compromise
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Category Overview</div>
+      <!-- IMPORT: Ground segment vs. space segment cyber threats, known TTPs -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Cyber counterspace overview to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Known Programs / Incidents</div>
+      <!-- IMPORT: AcidRain, Viasat KA-SAT attack, tracked APT activity against space ground segments -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Known incidents and programs to be imported]</span></div>
+    </div>
+  </div>
+
+  <!-- ORBITAL / RPO -->
+  <div class="sub-divider" style="margin-top:28px;">
+    <span class="tag tag-orbital" style="margin-right:10px;">Orbital / RPO</span>
+    Rendezvous & Proximity Operations · Inspector Satellites
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label">Category Overview</div>
+      <!-- IMPORT: RPO taxonomy, grappling/spoofing/kamikaze satellite concepts, dual-use ambiguity -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[RPO/orbital counterspace overview to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Known Programs</div>
+      <!-- IMPORT: Cosmos series, Shiyan, GSSAP, SJ-21, Luch/Olymp, etc. -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Known programs to be imported]</span></div>
+    </div>
+  </div>
+
+</div><!-- /weapons -->
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- TAB 4: INCIDENTS & TESTS                -->
+<!-- ════════════════════════════════════════ -->
+<div id="incidents" class="section">
+  <div class="section-header">
+    <div class="section-title">Incidents & Tests</div>
+    <div class="section-iq">Documented tests · Operational incidents · Debris-generating events</div>
+  </div>
+
+  <!-- Summary stats row -->
+  <div class="sub-divider">Summary</div>
+  <div class="three-col">
+    <div class="card">
+      <div class="card-label">Confirmed ASAT Tests</div>
+      <div class="card-title" style="font-size:22px; letter-spacing:2px;">—</div>
+      <!-- IMPORT: Total confirmed kinetic DA-ASAT tests across all actors -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Count and date range to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Debris-generating Events</div>
+      <div class="card-title" style="font-size:22px; letter-spacing:2px;">—</div>
+      <!-- IMPORT: Events creating trackable debris fields -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Count to be imported]</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">EW / Jamming Incidents</div>
+      <div class="card-title" style="font-size:22px; letter-spacing:2px;">—</div>
+      <!-- IMPORT: Documented electronic warfare incidents -->
+      <div class="card-body"><span style="color:#333; font-style:italic;">[Count and period to be imported]</span></div>
+    </div>
+  </div>
+
+  <!-- Chart placeholder -->
+  <div class="placeholder-cell" style="min-height:220px;">
+    <div class="placeholder-label">Chart — Incidents & Tests by Year, Category, and Actor</div>
+    <div class="placeholder-sub">Data to be imported · Chart.js stacked bar or scatter</div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="sub-divider" style="margin-top:28px;">Chronological Event Log</div>
+  <div class="timeline" id="incidentTimeline">
+
+    <!-- IMPORT: Replace all timeline items with actual event data.
+         Each item follows the structure below. Add as many as needed. -->
+
+    <div class="timeline-item">
+      <div class="timeline-date">— — ——</div>
+      <div class="timeline-line-wrap">
+        <div class="timeline-dot"></div>
+        <div class="timeline-connector"></div>
+      </div>
+      <div class="timeline-content">
+        <div class="timeline-content-title">
+          [Event title — e.g. "China conducts DA-ASAT test against dead satellite"]
+          <span class="tag tag-kinetic" style="margin-left:8px;">Kinetic</span>
+          <span class="tag sev-high" style="margin-left:4px;">High</span>
+        </div>
+        <div class="timeline-content-body">
+          [Event description: actor, target, orbit, debris generated, international response — to be imported]
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-date">— — ——</div>
+      <div class="timeline-line-wrap">
+        <div class="timeline-dot"></div>
+        <div class="timeline-connector"></div>
+      </div>
+      <div class="timeline-content">
+        <div class="timeline-content-title">
+          [Event title — e.g. "Russia activates Peresvet laser system"]
+          <span class="tag tag-directed" style="margin-left:8px;">Directed Energy</span>
+          <span class="tag sev-medium" style="margin-left:4px;">Medium</span>
+        </div>
+        <div class="timeline-content-body">
+          [Event description to be imported]
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-date">— — ——</div>
+      <div class="timeline-line-wrap">
+        <div class="timeline-dot"></div>
+        <div class="timeline-connector"></div>
+      </div>
+      <div class="timeline-content">
+        <div class="timeline-content-title">
+          [Event title — e.g. "GPS jamming reported over Eastern Europe"]
+          <span class="tag tag-electronic" style="margin-left:8px;">Electronic</span>
+          <span class="tag sev-medium" style="margin-left:4px;">Medium</span>
+        </div>
+        <div class="timeline-content-body">
+          [Event description to be imported]
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-date">— — ——</div>
+      <div class="timeline-line-wrap">
+        <div class="timeline-dot" style="border-color:#333;"></div>
+      </div>
+      <div class="timeline-content">
+        <div class="timeline-content-title">
+          [Event title — e.g. "AcidRain malware disables Viasat terminals"]
+          <span class="tag tag-cyber" style="margin-left:8px;">Cyber</span>
+          <span class="tag sev-high" style="margin-left:4px;">High</span>
+        </div>
+        <div class="timeline-content-body">
+          [Event description to be imported]
+        </div>
+      </div>
+    </div>
+
+    <!-- IMPORT: Continue adding timeline-item blocks above -->
+
+  </div><!-- /timeline -->
+
+</div><!-- /incidents -->
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- TAB 5: ASSESSMENT                       -->
+<!-- ════════════════════════════════════════ -->
+<div id="assessment" class="section">
+  <div class="section-header">
+    <div class="section-title">Assessment</div>
+    <div class="section-iq">Analyst judgments · Key findings · Effects for decision makers</div>
+  </div>
+
+  <!-- Key findings -->
+  <div class="sub-divider">Key Findings</div>
+
+  <div class="card" style="border-left: 2px solid #555;">
+    <div class="card-label">Finding 01</div>
+    <!-- IMPORT: Most significant finding -->
+    <div class="card-title">[Key finding headline to be imported]</div>
+    <div class="card-body"><span style="color:#333; font-style:italic;">[Supporting analysis to be imported]</span></div>
+  </div>
+
+  <div class="card" style="border-left: 2px solid #444;">
+    <div class="card-label">Finding 02</div>
+    <div class="card-title">[Key finding headline to be imported]</div>
+    <div class="card-body"><span style="color:#333; font-style:italic;">[Supporting analysis to be imported]</span></div>
+  </div>
+
+  <div class="card" style="border-left: 2px solid #333;">
+    <div class="card-label">Finding 03</div>
+    <div class="card-title">[Key finding headline to be imported]</div>
+    <div class="card-body"><span style="color:#333; font-style:italic;">[Supporting analysis to be imported]</span></div>
+  </div>
+
+  <!-- IMPORT: Add additional finding cards following the same pattern -->
+
+  <!-- Effects for decision makers -->
+  <div class="sub-divider" style="margin-top:32px;">Effects for Decision Makers</div>
+
+  <div class="card" style="border-left: 3px solid #886633;">
+    <div class="card-label">Effect 01</div>
+    <div class="card-title">[Effect title — e.g. "Debris-generating ASAT tests erode shared space access"]</div>
+    <!-- IMPORT: Analyst brief on operational/policy implications -->
+    <div class="card-body"><span style="color:#333; font-style:italic;">[Decision-maker brief to be imported]</span></div>
+  </div>
+
+  <div class="card" style="border-left: 3px solid #668833;">
+    <div class="card-label">Effect 02</div>
+    <div class="card-title">[Effect title]</div>
+    <div class="card-body"><span style="color:#333; font-style:italic;">[Decision-maker brief to be imported]</span></div>
+  </div>
+
+  <div class="card" style="border-left: 3px solid #336688;">
+    <div class="card-label">Effect 03</div>
+    <div class="card-title">[Effect title]</div>
+    <div class="card-body"><span style="color:#333; font-style:italic;">[Decision-maker brief to be imported]</span></div>
+  </div>
+
+  <!-- IMPORT: Add additional effect cards as needed -->
+
+  <!-- Overall judgment -->
+  <div class="sub-divider" style="margin-top:32px;">Overall Judgment</div>
+  <div class="card" style="background:#090909; border-color:#222;">
+    <div class="card-label">Analyst Assessment</div>
+    <!-- IMPORT: 2–3 paragraph overall judgment paragraph -->
+    <div class="card-body">
+      <div style="color:#333; font-style:italic; line-height:1.8;">[Overall analyst judgment to be imported. This section should address the dominant trajectory of counterspace capability development, the highest-risk scenario within the assessment horizon, and the primary recommendation for decision makers.]</div>
+    </div>
+  </div>
+
+</div><!-- /assessment -->
+
+</div><!-- /content -->
+
+<!-- ─── FOOTER ─── -->
+<div class="footer">
+  <div>NOMAD S.I.G. — STRATEGIC INTELLIGENCE GROUP</div>
+  <div class="footer-center">
+    COUNTERSPACE WEAPONS MONITOR · MON-02<br>
+    Data to be imported · Scaffold version
+  </div>
+  <div id="footerDate">— — ————</div>
+</div>
+
+<script>
+/* ── TAB NAVIGATION ── */
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const tabs = ['overview','actors','weapons','incidents','assessment'];
+  document.querySelectorAll('.nav-tab')[tabs.indexOf(id)].classList.add('active');
+}
+
+/* ── LIVE DATE ── */
+(function() {
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const now = new Date();
+  const str = `${String(now.getUTCDate()).padStart(2,'0')} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()}`;
+  ['headerDate','scopeDate','footerDate'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = str;
+  });
+})();
+</script>
+</body>
+</html>
