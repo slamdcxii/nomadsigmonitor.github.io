@@ -450,20 +450,20 @@ EVIDENCE.forEach(ev => {
 });
 
 const SIGNALS = [
-  { num:1, cat:'Military', title:'CMC purges degrade PLA command cohesion', desc:'Zhang Youxia & Liu Zhenli placed under investigation Jan 24, 2026. CMC reduced to 2 members. Eurasia Group: Beijing has "set aside option of invasion for at least 2 years."', score:29, priority:'DO NOW' },
-  { num:2, cat:'Military', title:'Justice Mission-2025 normalises contiguous zone strikes', desc:'Rocket artillery fired into Taiwan\'s 24nm zone for first time. 941 commercial flights disrupted. PLA rehearsing phase-zero blockade actions.', score:24, priority:'DO NOW' },
-  { num:10, cat:'Military', title:'Operation Epic Fury depletes US Indo-Pacific munitions', desc:'850+ Tomahawk cruise missiles fired in 28 days; annual US production <1,000. Pentagon pivot to JDAMs. USMC assets diverted from Okinawa.', score:15, priority:'DO NOW' },
-  { num:3, cat:'Political', title:'Trump delays $13–14B Taiwan arms sale ahead of summit', desc:'Summit confirmed May 14–15, 2026. State Dept stalled on two packages including PAC-3 and NASAMS. Creates discrete deterrence credibility window.', score:19, priority:'DO NEXT' },
-  { num:7, cat:'Economic', title:'15th Five-Year Plan targets tech "commanding heights"', desc:'Xi pursues coercion without conquest via AI, computing, chip dominance. GDP growth target 4.5–5% (lowest since 1991) signals low military risk appetite.', score:17, priority:'DO NEXT' },
-  { num:9, cat:'Military', title:'Type 076 LHD Sichuan: electromagnetic catapult UAV launch', desc:'GJ-21 naval stealth drone potentially aboard. First fixed-wing UAV-capable amphibious vessel in PLA service. Shortens 2027–2030 invasion viability timeline.', score:16, priority:'DO NEXT' },
-  { num:11, cat:'Political', title:'US-Iran conflict accelerates resource diversion from Indo-Pacific', desc:'3,000+ marines diverted from Okinawa. Arms packages rerouted. International law erosion reduces political cost of PRC coercive action.', score:14, priority:'DO NEXT' },
-  { num:4, cat:'Military', title:'Rocket Force corruption degrades A2/AD and nuclear deterrent', desc:'"Missiles filled with water, defective silos." If nuclear umbrella degraded, key precondition for forced reunification is absent.', score:19, priority:'DO LATER' },
+  { num:1, cat:'Military', title:'CMC purges degrade PLA command cohesion', desc:'Zhang Youxia & Liu Zhenli placed under investigation Jan 24, 2026. CMC reduced to 2 members. Eurasia Group: Beijing has "set aside option of invasion for at least 2 years."', score:29, priority:'CRITICAL' },
+  { num:2, cat:'Military', title:'Justice Mission-2025 normalises contiguous zone strikes', desc:'Rocket artillery fired into Taiwan\'s 24nm zone for first time. 941 commercial flights disrupted. PLA rehearsing phase-zero blockade actions.', score:24, priority:'CRITICAL' },
+  { num:10, cat:'Military', title:'Operation Epic Fury depletes US Indo-Pacific munitions', desc:'850+ Tomahawk cruise missiles fired in 28 days; annual US production <1,000. Pentagon pivot to JDAMs. USMC assets diverted from Okinawa.', score:15, priority:'SIGNIFICANT' },
+  { num:3, cat:'Political', title:'Trump delays $13–14B Taiwan arms sale ahead of summit', desc:'Summit confirmed May 14–15, 2026. State Dept stalled on two packages including PAC-3 and NASAMS. Creates discrete deterrence credibility window.', score:19, priority:'SIGNIFICANT' },
+  { num:7, cat:'Economic', title:'15th Five-Year Plan targets tech "commanding heights"', desc:'Xi pursues coercion without conquest via AI, computing, chip dominance. GDP growth target 4.5–5% (lowest since 1991) signals low military risk appetite.', score:17, priority:'SIGNIFICANT' },
+  { num:9, cat:'Military', title:'Type 076 LHD Sichuan: electromagnetic catapult UAV launch', desc:'GJ-21 naval stealth drone potentially aboard. First fixed-wing UAV-capable amphibious vessel in PLA service. Shortens 2027–2030 invasion viability timeline.', score:16, priority:'SIGNIFICANT' },
+  { num:11, cat:'Political', title:'US-Iran conflict accelerates resource diversion from Indo-Pacific', desc:'3,000+ marines diverted from Okinawa. Arms packages rerouted. International law erosion reduces political cost of PRC coercive action.', score:14, priority:'CONTRIBUTING' },
+  { num:4, cat:'Military', title:'Rocket Force corruption degrades A2/AD and nuclear deterrent', desc:'"Missiles filled with water, defective silos." If nuclear umbrella degraded, key precondition for forced reunification is absent.', score:19, priority:'CONTRIBUTING' },
   { num:5, cat:'Political', title:'PRC upgrades Taiwan language to "crack down on independence"', desc:'First wording change in years. ISW-AEI: small changes in PRC documents signal significant policy shifts. Constructs legal/political architecture for coercive escalation.', score:18, priority:'MONITOR' },
   { num:6, cat:'Political', title:'US 2026 ATA downgrades near-term invasion risk', desc:'Analytically defensible but risks complacency. Threat has shifted form — not diminished. KMT may exploit downgrade to block defense spending.', score:17, priority:'MONITOR' },
   { num:8, cat:'Political', title:'Taiwan defense budget deadlocked 10+ times in Legislative Yuan', desc:'KMT-TPP coalition blocking Lai\'s NT$1.25T T-Dome initiative. Beijing deliberately reducing military pressure to avoid strengthening DPP\'s spending case.', score:17, priority:'MONITOR' },
 ];
 
-const priorityClass = { 'DO NOW':'p-do-now', 'DO NEXT':'p-do-next', 'DO LATER':'p-do-later', 'MONITOR':'p-monitor' };
+const priorityClass = { 'CRITICAL':'p-critical', 'SIGNIFICANT':'p-significant', 'CONTRIBUTING':'p-contributing', 'MONITOR':'p-monitor' };
 const catClass = { 'Military':'cat-military', 'Political':'cat-political', 'Economic':'cat-economic', 'Technological':'cat-tech' };
 
 const grid = document.getElementById('signalGrid');
