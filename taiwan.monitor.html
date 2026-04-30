@@ -489,9 +489,9 @@ const scoreList = document.getElementById('scoreBarList');
 const sorted = [...SIGNALS].sort((a,b) => b.score - a.score);
 const maxScore = sorted[0].score;
 sorted.forEach(s => {
-  const color = s.priority === 'DO NOW'  ? '#bb7777'
-              : s.priority === 'DO NEXT' ? '#aa9966'
-              : s.priority === 'DO LATER'? '#8899aa'
+  const color = s.priority === 'CRITICAL'  ? '#bb7777'
+              : s.priority === 'SIGNIFICANT' ? '#aa9966'
+              : s.priority === 'CONTRIBUTING'? '#8899aa'
               :                            '#555555';
   const pct = Math.round((s.score / maxScore) * 100);
   const div = document.createElement('div');
